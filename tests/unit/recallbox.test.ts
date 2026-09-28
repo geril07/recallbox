@@ -12,7 +12,7 @@ import { createBackup, readBackup, restoreBackup } from "@/lib/backup"
 import {
   emptySchedule,
   gradeCard,
-  parseTags,
+  normalizeTags,
   queueFor,
   streakFor,
   type Deck,
@@ -127,10 +127,9 @@ describe("Scheduling and review behavior", () => {
     expect(streakFor(reviews, new Date(2026, 4, 16, 12))).toBe(0)
   })
   it("normalizes global tags without duplicates", () => {
-    expect(parseTags(" Spanish, travel, spanish, , Travel ")).toEqual([
-      "spanish",
-      "travel",
-    ])
+    expect(
+      normalizeTags([" Spanish", "travel", "spanish", " ", "Travel "]),
+    ).toEqual(["spanish", "travel"])
   })
 })
 

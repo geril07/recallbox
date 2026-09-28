@@ -16,7 +16,7 @@ import {
 import {
   colors,
   emptySchedule,
-  parseTags,
+  normalizeTags,
   type Asset,
   type Deck,
   type Flashcard,
@@ -46,6 +46,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { DeckIcon, IconButton, Confirm } from "@/components/shared"
 import { deckIcons } from "@/components/deck-icons"
 import { Markdown } from "@/components/markdown"
+import { TagInput } from "@/components/tag-input"
 import { notify, reportError } from "@/components/ui/toast"
 
 export function DeckEditor({
@@ -59,13 +60,15 @@ export function DeckEditor({
   const [description, setDescription] = useState(deck?.description || "")
   const [color, setColor] = useState<Deck["color"]>(deck?.color || "sage")
   const [icon, setIcon] = useState<Deck["icon"]>(deck?.icon || "book")
-  const [tags, setTags] = useState(deck?.tags.join(", ") || "")
+  const [tags, setTags] = useState(() => normalizeTags(deck?.tags ?? []))
+  const [tagQuery, setTagQuery] = useState("")
   const [busy, setBusy] = useState(false)
   const [discard, setDiscard] = useState(false)
   const dirty =
     name !== (deck?.name || "") ||
     description !== (deck?.description || "") ||
-    tags !== (deck?.tags.join(", ") || "") ||
+    JSON.stringify(tags) !== JSON.stringify(normalizeTags(deck?.tags ?? [])) ||
+    !!tagQuery.trim() ||
     color !== (deck?.color || "sage") ||
     icon !== (deck?.icon || "book")
   function close() {
@@ -74,7 +77,7 @@ export function DeckEditor({
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (busy) return
+    if (busy || tagQuery.trim()) return
     setBusy(true)
     try {
       await saveDeck({
@@ -83,7 +86,7 @@ export function DeckEditor({
         description,
         color,
         icon,
-        tags: parseTags(tags),
+        tags,
         createdAt: deck?.createdAt || Date.now(),
       })
       notify(deck ? "Deck updated" : "Your new deck is ready")
@@ -170,15 +173,14 @@ export function DeckEditor({
               <Label htmlFor="deck-tags">
                 Tags <span className="optional">optional</span>
               </Label>
-              <Input
+              <TagInput
                 id="deck-tags"
-                placeholder="languages, travel"
                 value={tags}
-                onChange={(e) => setTags(e.target.value)}
+                onChange={setTags}
+                query={tagQuery}
+                onQueryChange={setTagQuery}
+                disabled={busy}
               />
-              <p className="field-hint">
-                Separate with commas. Tags work across your library.
-              </p>
             </div>
             <DialogFooter>
               <Button
@@ -189,7 +191,10 @@ export function DeckEditor({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={busy || !name.trim()}>
+              <Button
+                type="submit"
+                disabled={busy || !name.trim() || !!tagQuery.trim()}
+              >
                 {busy ? <Loader2 className="animate-spin" /> : <Plus />}
                 {deck ? "Save changes" : "Create deck"}
               </Button>
@@ -228,7 +233,8 @@ export function CardEditor({
   const [answer, setAnswer] = useState(card?.answer || "")
   const [reverse, setReverse] = useState(card?.reverse || false)
   const [reversePrompt, setReversePrompt] = useState(card?.reversePrompt || "")
-  const [tags, setTags] = useState(card?.tags.join(", ") || "")
+  const [tags, setTags] = useState(() => normalizeTags(card?.tags ?? []))
+  const [tagQuery, setTagQuery] = useState("")
   const [assets, setAssets] = useState<Asset[]>([])
   const [busy, setBusy] = useState(false)
   const [discard, setDiscard] = useState(false)
@@ -240,7 +246,8 @@ export function CardEditor({
     answer !== (card?.answer || "") ||
     reverse !== (card?.reverse || false) ||
     reversePrompt !== (card?.reversePrompt || "") ||
-    tags !== (card?.tags.join(", ") || "") ||
+    JSON.stringify(tags) !== JSON.stringify(normalizeTags(card?.tags ?? [])) ||
+    !!tagQuery.trim() ||
     selectedDeck !== (card?.deckId || deckId || decks[0]?.id || "")
   function close() {
     if (dirty) setDiscard(true)
@@ -281,7 +288,7 @@ export function CardEditor({
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (busy) return
+    if (busy || tagQuery.trim()) return
     setBusy(true)
     try {
       const now = Date.now()
@@ -291,7 +298,7 @@ export function CardEditor({
           deckId: selectedDeck,
           prompt,
           answer,
-          tags: parseTags(tags),
+          tags,
           reverse,
           reversePrompt,
           forward: card?.forward || emptySchedule(now),
@@ -502,13 +509,14 @@ export function CardEditor({
               <Label htmlFor="card-tags">
                 Tags <span className="optional">optional</span>
               </Label>
-              <Input
+              <TagInput
                 id="card-tags"
-                placeholder="vocabulary, chapter 1"
                 value={tags}
-                onChange={(e) => setTags(e.target.value)}
+                onChange={setTags}
+                query={tagQuery}
+                onQueryChange={setTagQuery}
+                disabled={busy}
               />
-              <p className="field-hint">Separate with commas.</p>
             </div>
             <DialogFooter>
               <Button
@@ -522,7 +530,11 @@ export function CardEditor({
               <Button
                 type="submit"
                 disabled={
-                  busy || !prompt.trim() || !answer.trim() || !selectedDeck
+                  busy ||
+                  !prompt.trim() ||
+                  !answer.trim() ||
+                  !selectedDeck ||
+                  !!tagQuery.trim()
                 }
               >
                 {busy ? <Loader2 className="animate-spin" /> : <Check />}

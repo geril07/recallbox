@@ -28,7 +28,8 @@ If Chromium is not installed for Playwright, run `npx playwright install chromiu
 ## What is included
 
 - Deck and card creation, editing, deletion, search, and tags.
-- Global tags: one topic can connect cards and decks across the library.
+- Global tags: one topic can connect cards and decks across the library. Card and deck editors share searchable tag suggestions, removable chips, and an explicit create-tag option. Tags are trimmed, lowercased, and deduplicated (up to 30 tags, 50 characters each). Unselected tag drafts stay visible and must be selected, created, or cleared before saving.
+- Searchable single-tag filters on the deck library and card lists. Library tag filters remain in the URL for bookmarks and reloads.
 - Markdown prompts and answers, with a formatting toolbar, preview, tables, task lists, code blocks, links, and images. Raw HTML is not executed.
 - Paste images from the clipboard or upload PNG/JPEG/WebP/GIF files, up to 10 MB each. Uploaded images live in IndexedDB, not a remote service.
 - Optional reverse practice. The full answer becomes the reverse prompt unless a shorter override is provided. The original prompt is the reverse answer.

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link, useParams, useSearch } from "@tanstack/react-router"
+import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router"
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -17,7 +17,8 @@ import {
 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
 import { deleteCard } from "@/lib/db"
-import { queueFor, type Flashcard } from "@/lib/model"
+import { queueFor, tagsFor, type Flashcard } from "@/lib/model"
+import { TagFilter } from "@/components/tag-filter"
 import { DeckTile } from "@/components/deck-tile"
 import { Confirm, DeckIcon, EmptyState, IconButton } from "@/components/shared"
 import { Button } from "@/components/ui/button"
@@ -45,6 +46,7 @@ import { notify, reportError } from "@/components/ui/toast"
 export function Decks() {
   const { decks, cards, now, editDeck } = useApp()
   const { tag } = useSearch({ from: "/decks" })
+  const navigate = useNavigate()
   const [query, setQuery] = useState("")
   const [view, setView] = useState<"grid" | "list">("grid")
   const [sort, setSort] = useState("recent")
@@ -86,6 +88,17 @@ export function Decks() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
+        <TagFilter
+          label="Filter decks by tag"
+          tags={tagsFor([...decks, ...cards])}
+          value={tag}
+          onChange={(value) => {
+            void navigate({
+              to: "/decks",
+              search: { tag: value || undefined },
+            }).catch(reportError)
+          }}
+        />
         <Select
           value={sort}
           onValueChange={(v) => v && setSort(v)}
@@ -137,19 +150,6 @@ export function Decks() {
             Due for review
           </Button>
         </div>
-        {tag && (
-          <Badge variant="outline">
-            #{tag}
-            <Link
-              to="/decks"
-              search={{ tag: undefined }}
-              className="ml-2"
-              aria-label="Clear tag filter"
-            >
-              ×
-            </Link>
-          </Badge>
-        )}
       </div>
       {visible.length ? (
         <div
@@ -259,7 +259,7 @@ export function DeckDetail() {
   const { decks, cards, now, editDeck, editCard } = useApp()
   const deck = decks.find((d) => d.id === deckId)
   const [query, setQuery] = useState("")
-  const [tag, setTag] = useState("all")
+  const [tag, setTag] = useState("")
   const [preview, setPreview] = useState<Flashcard | null>(null)
   const [deleting, setDeleting] = useState<Flashcard | null>(null)
   const [busy, setBusy] = useState(false)
@@ -275,13 +275,13 @@ export function DeckDetail() {
       </EmptyState>
     )
   const deckCards = cards.filter((c) => c.deckId === deckId)
-  const tags = [...new Set(deckCards.flatMap((c) => c.tags))].toSorted()
+  const tags = tagsFor(deckCards)
   const visible = deckCards.filter(
     (c) =>
       `${c.prompt} ${c.answer} ${c.tags.join(" ")}`
         .toLowerCase()
         .includes(query.toLowerCase()) &&
-      (tag === "all" || c.tags.includes(tag)),
+      (!tag || c.tags.includes(tag)),
   )
   const due = queueFor(deckCards, now).length
   async function remove() {
@@ -366,26 +366,12 @@ export function DeckDetail() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <Select
+        <TagFilter
+          label="Filter cards by tag"
+          tags={tags}
           value={tag}
-          onValueChange={(v) => v && setTag(v)}
-          items={[
-            { value: "all", label: "All tags" },
-            ...tags.map((t) => ({ value: t, label: t })),
-          ]}
-        >
-          <SelectTrigger aria-label="Filter cards by tag">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All tags</SelectItem>
-            {tags.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={setTag}
+        />
       </div>
       {visible.length ? (
         <Card className="card-table">
@@ -491,14 +477,9 @@ function LayersIcon() {
 export function TagsPage() {
   const { decks, cards } = useApp()
   const [query, setQuery] = useState("")
-  const tags = [
-    ...new Set([
-      ...decks.flatMap((d) => d.tags),
-      ...cards.flatMap((c) => c.tags),
-    ]),
-  ]
-    .toSorted()
-    .filter((t) => t.includes(query.toLowerCase()))
+  const tags = tagsFor([...decks, ...cards]).filter((t) =>
+    t.includes(query.toLowerCase()),
+  )
   return (
     <div>
       <div className="page-heading">

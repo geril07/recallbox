@@ -119,15 +119,15 @@ export function referencedAssetIds(cards: Flashcard[]) {
     ),
   )
 }
-export function parseTags(value: string) {
+export function normalizeTags(values: string[]) {
   return [
     ...new Set(
-      value
-        .split(",")
-        .map((v) => v.trim().toLowerCase())
-        .filter(Boolean),
+      values.map((value) => value.trim().toLowerCase()).filter(Boolean),
     ),
   ]
+}
+export function tagsFor(items: { tags: string[] }[]) {
+  return [...new Set(items.flatMap((item) => item.tags))].toSorted()
 }
 export function intervalLabel(due: number, now = Date.now()) {
   const minutes = Math.max(1, Math.round((due - now) / 60000))

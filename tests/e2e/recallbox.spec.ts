@@ -8,7 +8,10 @@ async function newDeck(page: Page) {
   await page
     .getByLabel("Description optional")
     .fill("A small travel vocabulary")
-  await page.getByLabel("Tags optional").fill("languages, travel")
+  for (const tag of ["languages", "travel"]) {
+    await page.getByRole("combobox", { name: "Tags optional" }).fill(tag)
+    await page.getByRole("option", { name: tag, exact: true }).click()
+  }
   await page.getByRole("button", { name: "Create deck", exact: true }).click()
   await page
     .getByRole("main")
@@ -26,7 +29,10 @@ async function newCard(page: Page, image = false) {
     .fill("**Hello**\n\nA friendly daytime greeting.")
   await page.getByRole("switch", { name: "Practice both ways" }).click()
   await page.getByLabel("Reverse prompt optional").fill("Hello")
-  await page.getByLabel("Tags optional").fill("greetings, travel")
+  for (const tag of ["greetings", "travel"]) {
+    await page.getByRole("combobox", { name: "Tags optional" }).fill(tag)
+    await page.getByRole("option", { name: tag, exact: true }).click()
+  }
   if (image) {
     await page
       .getByLabel("Upload card image")
@@ -164,6 +170,249 @@ test("file routes keep deck filters and deep links on reload", async ({
   await page.getByRole("button", { name: "Review deck" }).click()
   await expect(page).toHaveURL(/\/study\?deck=/)
   await expect(page.getByText(/0 of \d+ reviewed/)).toBeVisible()
+})
+
+test("tag filters search, clear, and preserve deck URLs", async ({ page }) => {
+  await page.goto("/decks")
+  await page.getByRole("combobox", { name: "Filter decks by tag" }).click()
+  await page
+    .getByRole("combobox", { name: "Search tags", exact: true })
+    .fill("SPAN")
+  await expect(
+    page.getByRole("option", { name: "spanish", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("option", { name: "design", exact: true }),
+  ).toHaveCount(0)
+  await page.getByRole("option", { name: "spanish", exact: true }).click()
+  await expect(page).toHaveURL(/tag=spanish/)
+  await page.reload()
+  await expect(
+    page.getByRole("combobox", { name: "Filter decks by tag" }),
+  ).toContainText("spanish")
+  await expect(
+    page.getByRole("main").getByRole("link", { name: /Design essentials/ }),
+  ).toHaveCount(0)
+  await page.getByRole("combobox", { name: "Filter decks by tag" }).click()
+  await page.getByRole("option", { name: "All tags", exact: true }).click()
+  await expect(page).toHaveURL((url) => !url.searchParams.get("tag"))
+  await expect(
+    page.getByRole("main").getByRole("link", { name: /Design essentials/ }),
+  ).toBeVisible()
+
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: /Everyday Spanish/ })
+    .click()
+  await page.getByRole("combobox", { name: "Filter cards by tag" }).click()
+  await page
+    .getByRole("combobox", { name: "Search tags", exact: true })
+    .fill("no-such-tag")
+  await expect(
+    page.getByText("No matching tags", { exact: true }),
+  ).toBeVisible()
+  await page
+    .getByRole("combobox", { name: "Search tags", exact: true })
+    .fill("greet")
+  await page
+    .getByRole("combobox", { name: "Search tags", exact: true })
+    .press("ArrowDown")
+  await page
+    .getByRole("combobox", { name: "Search tags", exact: true })
+    .press("Enter")
+  await expect(page.getByRole("button", { name: /^Buenos días/ })).toBeVisible()
+  await expect(page.getByRole("button", { name: /^Gracias/ })).toHaveCount(0)
+  await page.getByRole("combobox", { name: "Filter cards by tag" }).click()
+  await page.getByRole("option", { name: "All tags", exact: true }).click()
+  await expect(page.getByRole("button", { name: /^Gracias/ })).toBeVisible()
+})
+
+test("tag editors create, reuse, remove, and persist chips without submitting on Enter", async ({
+  page,
+}) => {
+  await newDeck(page)
+  await page.getByRole("button", { name: "Edit deck", exact: true }).click()
+  await page
+    .getByRole("button", { name: "Remove tag travel", exact: true })
+    .click()
+  const tagInput = page.getByRole("combobox", { name: "Tags optional" })
+  await tagInput.fill("  Focus  ")
+  await expect(
+    page.getByRole("button", {
+      name: "Save changes",
+      exact: true,
+      includeHidden: true,
+    }),
+  ).toBeDisabled()
+  await expect(
+    page.getByRole("option", { name: "Create “focus”", exact: true }),
+  ).toBeVisible()
+  await tagInput.press("Enter")
+  await expect(
+    page.getByRole("dialog", { name: "Edit deck", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Remove tag focus", exact: true }),
+  ).toBeVisible()
+  await tagInput.fill("FOCUS")
+  await expect(
+    page.getByRole("option", { name: "Create “focus”", exact: true }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole("option", { name: "focus", exact: true }),
+  ).toHaveAttribute("aria-selected", "true")
+  await tagInput.fill("")
+  await page.getByLabel("Deck name").click()
+  await page.getByRole("button", { name: "Save changes", exact: true }).click()
+  await expect(
+    page.getByRole("dialog", { name: "Edit deck", exact: true }),
+  ).toHaveCount(0)
+  await page.reload()
+  await page.getByRole("button", { name: "Edit deck", exact: true }).click()
+  await expect(
+    page.getByRole("button", { name: "Remove tag focus", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Remove tag travel", exact: true }),
+  ).toHaveCount(0)
+  await page.getByRole("button", { name: "Cancel", exact: true }).click()
+
+  await page
+    .getByRole("button", { name: "Add card", exact: true })
+    .first()
+    .click()
+  await page.getByLabel("Prompt", { exact: true }).fill("Tagged prompt")
+  await page.getByLabel("Answer", { exact: true }).fill("Tagged answer")
+  await tagInput.fill("foc")
+  await page.getByRole("option", { name: "focus", exact: true }).click()
+  await tagInput.fill("all")
+  await page.getByRole("option", { name: "Create “all”", exact: true }).click()
+  await expect(
+    page.getByRole("button", { name: "Remove tag focus", exact: true }),
+  ).toBeVisible()
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Add card", exact: true })
+    .click()
+  await expect(
+    page.getByRole("dialog", {
+      name: "One more thing to remember",
+      exact: true,
+    }),
+  ).toHaveCount(0)
+  await page.getByRole("button", { name: "Add card", exact: true }).click()
+  await page.getByLabel("Prompt", { exact: true }).fill("Untagged prompt")
+  await page.getByLabel("Answer", { exact: true }).fill("Untagged answer")
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Add card", exact: true })
+    .click()
+  await expect(
+    page.getByRole("dialog", {
+      name: "One more thing to remember",
+      exact: true,
+    }),
+  ).toHaveCount(0)
+  await page.reload()
+  await page.getByRole("combobox", { name: "Filter cards by tag" }).click()
+  await page.getByRole("option", { name: "all", exact: true }).click()
+  await expect(
+    page.getByRole("button", { name: /^Tagged prompt/ }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: /^Untagged prompt/ }),
+  ).toHaveCount(0)
+  await page.getByRole("combobox", { name: "Filter cards by tag" }).click()
+  await page.getByRole("option", { name: "All tags", exact: true }).click()
+  await expect(
+    page.getByRole("button", { name: /^Untagged prompt/ }),
+  ).toBeVisible()
+})
+
+test("tag drafts are guarded and tag controls remain accessible", async ({
+  page,
+}) => {
+  await page.goto("/decks")
+  await page.getByRole("button", { name: "New deck", exact: true }).click()
+  const input = page.getByRole("combobox", { name: "Tags optional" })
+  await input.fill("x".repeat(51))
+  await expect(
+    page.getByText("Use 50 characters or fewer per tag."),
+  ).toBeVisible()
+  await expect(page.getByRole("option", { name: /^Create/ })).toHaveCount(0)
+  await input.press("Enter")
+  await expect(
+    page.getByRole("dialog", { name: "A new place to learn" }),
+  ).toBeVisible()
+  await input.fill("draft tag")
+  await page.getByLabel("Deck name").click()
+  await page.getByRole("button", { name: "Cancel", exact: true }).click()
+  await expect(
+    page.getByRole("alertdialog", { name: "Discard changes?" }),
+  ).toBeVisible()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click()
+  await expect(input).toHaveValue("draft tag")
+  await input.fill("science")
+  await page.getByRole("option", { name: "science", exact: true }).click()
+  await input.fill("lear")
+  await expect(
+    page.getByRole("option", { name: "learning", exact: true }),
+  ).toBeVisible()
+  await page.evaluate(async () => {
+    await document.fonts.ready
+  })
+  const result = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa"])
+    .analyze()
+  expect(
+    result.violations
+      .filter((v) => v.impact === "critical" || v.impact === "serious")
+      .map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })),
+  ).toEqual([])
+})
+
+test("tag chips enforce the tag limit without overflowing the editor", async ({
+  page,
+}) => {
+  await page.goto("/decks")
+  await page.getByRole("button", { name: "New deck", exact: true }).click()
+  const input = page.getByRole("combobox", { name: "Tags optional" })
+  const longTag = "t".repeat(50)
+  for (const tag of [
+    longTag,
+    ...Array.from({ length: 29 }, (_, i) => `topic-${i}`),
+  ]) {
+    await input.fill(tag)
+    await page
+      .getByRole("option", { name: `Create “${tag}”`, exact: true })
+      .click()
+  }
+  await expect(
+    page.getByText("You can add up to 30 tags. Remove a tag to add another."),
+  ).toBeVisible()
+  await input.fill("extra")
+  await expect(
+    page.getByRole("option", { name: "Create “extra”", exact: true }),
+  ).toBeDisabled()
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy()
+  await page.getByLabel("Deck name").click()
+  await page
+    .getByRole("button", { name: `Remove tag ${longTag}`, exact: true })
+    .click()
+  await input.fill("replacement")
+  await page
+    .getByRole("option", { name: "Create “replacement”", exact: true })
+    .click()
+  await expect(
+    page.getByRole("button", { name: "Remove tag replacement", exact: true }),
+  ).toBeVisible()
 })
 
 test("malformed search values fall back without breaking routes", async ({
