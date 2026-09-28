@@ -157,20 +157,50 @@
   --tone: var(--sand-fg);
 }
 .app-shell {
+  --sidebar-width: 235px;
+  --sidebar-space: var(--sidebar-width);
+  --sidebar-padding: 20px;
+  --header-height: 73px;
   display: flex;
   min-height: 100svh;
 }
+.app-shell[data-sidebar-open="false"] {
+  --sidebar-space: 0px;
+}
 .sidebar {
-  width: 235px;
-  padding: 31px 20px 0;
+  width: var(--sidebar-space);
   background: var(--sidebar);
-  border-right: 1px solid var(--border);
   position: fixed;
   inset: 0 auto 0 0;
   display: flex;
   flex-direction: column;
   z-index: 30;
+  overflow: hidden;
+  transition: width 240ms ease-in-out;
+}
+.sidebar-content {
+  width: var(--sidebar-width);
+  min-height: 100%;
+  padding: 0 var(--sidebar-padding);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
+}
+.sidebar .brand-link {
+  height: var(--header-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.sidebar .brand {
+  font-size: 20px;
+  letter-spacing: -0.8px;
+}
+.sidebar .brand-mark {
+  width: 24px;
+  height: 28px;
 }
 .brand-link {
   display: block;
@@ -290,14 +320,18 @@
   background: var(--muted-foreground);
 }
 .app-main {
-  margin-left: 235px;
-  width: calc(100% - 235px);
+  margin-left: var(--sidebar-space);
+  width: calc(100% - var(--sidebar-space));
+  transition:
+    margin-left 240ms ease-in-out,
+    width 240ms ease-in-out;
   display: flex;
   flex-direction: column;
   min-height: 100svh;
 }
 .topbar {
-  height: 73px;
+  height: var(--header-height);
+  flex-shrink: 0;
   background: var(--sidebar);
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -1671,13 +1705,9 @@
   }
 }
 @media (max-width: 1250px) {
-  .sidebar {
-    width: 215px;
-    padding-inline: 14px;
-  }
-  .app-main {
-    margin-left: 215px;
-    width: calc(100% - 215px);
+  .app-shell {
+    --sidebar-width: 215px;
+    --sidebar-padding: 14px;
   }
   .page-content {
     padding: 30px 28px 25px;
@@ -1740,6 +1770,7 @@
   .app-main {
     margin-left: 0;
     width: 100%;
+    transition: none;
   }
   .page-heading h1 {
     font-size: 28px;

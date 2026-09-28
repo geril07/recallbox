@@ -851,6 +851,64 @@ test("mobile sheet slides and fades without a backdrop flash, and respects reduc
   await expect(drawer).toHaveCount(0)
 })
 
+test("desktop sidebar aligns with the header and collapses smoothly", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "Desktop sidebar only")
+  await page.goto("/decks")
+  const sidebar = page.getByRole("complementary", { name: "Main sidebar" })
+  const brand = sidebar.locator(".brand")
+  const header = page.locator(".topbar")
+  const brandBox = await brand.boundingBox()
+  const headerBox = await header.boundingBox()
+  expect(brandBox).not.toBeNull()
+  expect(headerBox).not.toBeNull()
+  expect(
+    Math.abs(
+      brandBox!.y +
+        brandBox!.height / 2 -
+        (headerBox!.y + headerBox!.height / 2),
+    ),
+  ).toBeLessThan(1)
+  const width = (await sidebar.boundingBox())!.width
+  await page.getByRole("button", { name: "Collapse sidebar" }).click()
+  const collapsed = page.locator("#desktop-sidebar")
+  const frames = await collapsed.evaluate(async (element) => {
+    const samples: { sidebar: number; main: number }[] = []
+    const main = document.querySelector(".app-main")!
+    for (let i = 0; i < 20; i++) {
+      await new Promise(requestAnimationFrame)
+      samples.push({
+        sidebar: element.getBoundingClientRect().width,
+        main: main.getBoundingClientRect().left,
+      })
+    }
+    return samples
+  })
+  expect(
+    frames.some((frame) => frame.sidebar > 0 && frame.sidebar < width),
+  ).toBe(true)
+  for (const frame of frames)
+    expect(Math.abs(frame.sidebar - frame.main)).toBeLessThan(1)
+  await expect(collapsed).toHaveCSS("width", "0px")
+  await expect(collapsed).toHaveAttribute("inert", "")
+  await expect(page.locator(".app-main")).toHaveCSS("margin-left", "0px")
+  await expect(
+    page.getByRole("navigation", { name: "Main navigation" }),
+  ).toHaveCount(0)
+  await page.getByRole("button", { name: "Expand sidebar" }).click()
+  await expect(sidebar).toHaveCSS("width", `${width}px`)
+  await expect(sidebar).not.toHaveAttribute("inert")
+  await expect(page.locator(".app-main")).toHaveCSS("margin-left", `${width}px`)
+  await sidebar.getByRole("link", { name: "Tags", exact: true }).click()
+  await expect(page).toHaveURL(/\/tags$/)
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.getByRole("button", { name: "Collapse sidebar" }).click()
+  await expect(collapsed).toHaveCSS("width", "0px")
+  await expect(collapsed).toHaveCSS("transition-duration", "1e-05s")
+})
+
 test("shows the brand mark in navigation and serves the favicon and app icons", async ({
   page,
 }) => {

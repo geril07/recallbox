@@ -7,6 +7,8 @@ import {
   Menu,
   Monitor,
   Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   Settings2,
   Sun,
@@ -147,6 +149,7 @@ export function Layout() {
     deckId?: string
   } | null>(null)
   const [mobile, setMobile] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [clock, setClock] = useState(Date.now)
   const now = Math.max(clock, library?.loadedAt ?? clock)
   const { theme, setTheme } = useTheme()
@@ -183,9 +186,17 @@ export function Layout() {
   }
   return (
     <AppContext.Provider value={appValue}>
-      <div className="app-shell">
-        <aside className="sidebar" aria-label="Main sidebar">
-          <Navigation {...navProps} />
+      <div className="app-shell" data-sidebar-open={sidebarOpen}>
+        <aside
+          id="desktop-sidebar"
+          className="sidebar"
+          aria-label="Main sidebar"
+          aria-hidden={!sidebarOpen}
+          inert={!sidebarOpen}
+        >
+          <div className="sidebar-content">
+            <Navigation {...navProps} />
+          </div>
         </aside>
         <div className={cn("app-main", path === "/study" && "study-layout")}>
           <header className="topbar">
@@ -196,6 +207,15 @@ export function Layout() {
                 onClick={() => setMobile(true)}
               >
                 <Menu />
+              </IconButton>
+              <IconButton
+                label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                className="hidden lg:inline-flex"
+                aria-expanded={sidebarOpen}
+                aria-controls="desktop-sidebar"
+                onClick={() => setSidebarOpen((open) => !open)}
+              >
+                {sidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
               </IconButton>
               <span className="topbar-title">{title}</span>
             </div>
