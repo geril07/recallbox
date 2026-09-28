@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build && tsc -b",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
@@ -40,6 +40,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
+    "@tanstack/router-plugin": "^1.168.41",
     "@types/google.accounts": "^0.0.18",
     "@types/node": "^24.19.0",
     "@types/react": "^19.2.18",

@@ -140,6 +140,47 @@ test("ZIP restore recovers a deleted deck and its local image", async ({
     .toBe(192)
 })
 
+test("file routes keep deck filters and deep links on reload", async ({
+  page,
+}) => {
+  await page.goto("/decks?tag=spanish")
+  await expect(
+    page.getByRole("main").getByRole("link", { name: /Everyday Spanish/ }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("main").getByRole("link", { name: /Design essentials/ }),
+  ).toHaveCount(0)
+  await page.reload()
+  await expect(
+    page.getByRole("main").getByRole("link", { name: /Everyday Spanish/ }),
+  ).toBeVisible()
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: /Everyday Spanish/ })
+    .click()
+  await expect(page).toHaveURL(/\/decks\/[^/?]+/)
+  await page.reload()
+  await expect(page.getByRole("button", { name: "Review deck" })).toBeVisible()
+  await page.getByRole("button", { name: "Review deck" }).click()
+  await expect(page).toHaveURL(/\/study\?deck=/)
+  await expect(page.getByText(/0 of \d+ reviewed/)).toBeVisible()
+})
+
+test("malformed search values fall back without breaking routes", async ({
+  page,
+}) => {
+  await page.goto("/decks?tag=%5B%22spanish%22%5D")
+  await expect(
+    page.getByRole("main").getByRole("link", { name: /Everyday Spanish/ }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("main").getByRole("link", { name: /Design essentials/ }),
+  ).toBeVisible()
+
+  await page.goto("/study?deck=42")
+  await expect(page.getByText("0 of 18 reviewed")).toBeVisible()
+})
+
 test("rejects an invalid import without replacing the library", async ({
   page,
 }) => {

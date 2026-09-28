@@ -9,6 +9,7 @@
     "import",
     "vitest"
   ],
+  "ignorePatterns": ["src/routeTree.gen.ts"],
   "categories": {
     "correctness": "error",
     "suspicious": "error",

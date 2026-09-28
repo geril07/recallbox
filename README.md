@@ -83,11 +83,17 @@ Started from the official **Vite React + TypeScript** template. Components were 
 - `src/lib/db.ts`: Dexie/IndexedDB transactions and starter content.
 - `src/lib/backup.ts`: portable ZIP validation and restore.
 - `src/lib/drive.ts`: Google Identity Services and Drive API.
-- `src/router.tsx`: TanStack Router, with lazy-loaded secondary screens.
+- `src/lib/search.ts`: reusable Zod schemas for route search parameters.
+- `src/routes/`: TanStack Router file routes. The Vite plugin generates `src/routeTree.gen.ts` and splits page components into lazy chunks.
+- `src/router.ts`: router instance and generated route-tree registration.
 - `src/index.css`: centralized theme/color tokens and responsive app layouts.
 - `tests/`: unit and browser tests.
 
 Versions are recorded in `package-lock.json`. Use `npm ci` for repeatable installation. Fonts are bundled locally; no font CDN is needed. Oxfmt uses two-space indentation, double quotes, and no semicolons. Source imports use `@/` (including unit tests); Oxlint rejects relative imports. Vite and Vitest both resolve the alias.
+
+## Route search parameters
+
+TanStack Router accepts Zod v4 schemas directly as `validateSearch`; no adapter is needed. Add new search fields to `src/lib/search.ts` using the shared `searchString` field. Its `.catch("").default("")` makes missing and malformed values resolve to an empty string (no filter) instead of showing a route error. `.default()` alone does not recover invalid values; `.catch()` alone does not make the field optional for typed links. The schemas are tested against JSON-typed URL values and browser deep links.
 
 ## Deployment
 
@@ -98,6 +104,8 @@ Deploy `dist/` to an HTTPS static host. Configure an SPA fallback so `/decks`, `
 - [shadcn + Vite](https://ui.shadcn.com/docs/installation/vite)
 - [Base UI Toast](https://base-ui.com/react/components/toast)
 - [TanStack Router](https://tanstack.com/router/latest/docs/framework/react/quick-start)
+- [TanStack Router search parameters](https://tanstack.com/router/latest/docs/framework/react/guide/search-params)
+- [Zod defaults and catch](https://zod.dev/api#defaults)
 - [Dexie React](https://dexie.org/docs/Tutorial/React)
 - [ts-fsrs](https://open-spaced-repetition.github.io/ts-fsrs/)
 - [Google token model](https://developers.google.com/identity/oauth2/web/guides/use-token-model)
