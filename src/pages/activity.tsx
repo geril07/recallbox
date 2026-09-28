@@ -1,16 +1,16 @@
-import { Link } from '@tanstack/react-router'
-import { ArrowRight, CheckCheck, Flame, Target, TrendingUp } from 'lucide-react'
-import { useApp } from '@/lib/app-context'
-import { dateKey, streakFor } from '@/lib/model'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Link } from "@tanstack/react-router"
+import { ArrowRight, CheckCheck, Flame, Target, TrendingUp } from "lucide-react"
+import { useApp } from "@/lib/app-context"
+import { dateKey, streakFor } from "@/lib/model"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { DeckIcon, EmptyState } from '@/components/shared'
-import { WeekActivity } from './overview'
+} from "@/components/ui/tooltip"
+import { DeckIcon, EmptyState } from "@/components/shared"
+import { WeekActivity } from "@/pages/overview"
 
 export function Activity() {
   const { reviews, decks, cards, now } = useApp()
@@ -48,20 +48,20 @@ export function Activity() {
       </div>
       <div className="stats-grid">
         {[
-          { icon: CheckCheck, title: 'Total reviews', value: reviews.length },
+          { icon: CheckCheck, title: "Total reviews", value: reviews.length },
           {
             icon: Flame,
-            title: 'Current streak',
+            title: "Current streak",
             value: `${streakFor(reviews, new Date(now))} days`,
           },
           {
             icon: Target,
-            title: 'Recall rate',
-            value: recall === null ? '—' : `${recall}%`,
+            title: "Recall rate",
+            value: recall === null ? "—" : `${recall}%`,
           },
           {
             icon: TrendingUp,
-            title: 'Cards learned',
+            title: "Cards learned",
             value: cards.filter(
               (c) =>
                 c.forward.state === 2 && (!c.reverse || c.backward.state === 2),
@@ -99,9 +99,9 @@ export function Activity() {
                   />
                   <TooltipContent>
                     {d.toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                    })}{' '}
+                      month: "short",
+                      day: "numeric",
+                    })}{" "}
                     · {count} reviews
                   </TooltipContent>
                 </Tooltip>
@@ -128,8 +128,8 @@ export function Activity() {
         </div>
         {reviews.length ? (
           <Card className="recent-reviews">
-            {[...reviews]
-              .sort((a, b) => b.at - a.at)
+            {reviews
+              .toSorted((a, b) => b.at - a.at)
               .slice(0, 20)
               .map((r) => {
                 const card = cards.find((c) => c.id === r.cardId)
@@ -138,26 +138,26 @@ export function Activity() {
                   <div key={r.id} className="review-row">
                     {deck && <DeckIcon small deck={deck} />}
                     <div className="flex-1 min-w-0">
-                      <strong>{card?.prompt || 'Deleted card'}</strong>
+                      <strong>{card?.prompt || "Deleted card"}</strong>
                       <p>
-                        {deck?.name || 'Deleted deck'} ·{' '}
-                        {r.direction === 'backward' ? 'Reverse' : 'Forward'}
+                        {deck?.name || "Deleted deck"} ·{" "}
+                        {r.direction === "backward" ? "Reverse" : "Forward"}
                       </p>
                     </div>
                     <span
-                      className={`review-grade color-${['', 'rose', 'peach', 'sage', 'blue'][r.rating]}`}
+                      className={`review-grade color-${["", "rose", "peach", "sage", "blue"][r.rating]}`}
                     >
-                      {['', 'Again', 'Hard', 'Good', 'Easy'][r.rating]}
+                      {["", "Again", "Hard", "Good", "Easy"][r.rating]}
                     </span>
                     <time>
                       {new Date(r.at).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
+                        month: "short",
+                        day: "numeric",
                       })}
                       <small>
                         {new Date(r.at).toLocaleTimeString(undefined, {
-                          hour: '2-digit',
-                          minute: '2-digit',
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </small>
                     </time>

@@ -1,14 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { RouterProvider } from '@tanstack/react-router'
-import { MotionConfig } from 'motion/react'
-import { TooltipProvider } from './components/ui/tooltip'
-import { ToastProvider } from './components/ui/toast'
-import { router } from './router'
-import './index.css'
-import './pwa'
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import { RouterProvider } from "@tanstack/react-router"
+import { MotionConfig } from "motion/react"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { ToastProvider } from "@/components/ui/toast"
+import { router } from "@/router"
+import "@/index.css"
+import "@/pwa"
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">
       <TooltipProvider delay={350}>

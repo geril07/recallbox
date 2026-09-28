@@ -1,22 +1,22 @@
-import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, Ellipsis, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useApp } from '@/lib/app-context'
-import { deleteDeck } from '@/lib/db'
-import { queueFor, type Deck } from '@/lib/model'
-import { Card } from './ui/card'
-import { Badge } from './ui/badge'
-import { Button } from './ui/button'
+import { useState } from "react"
+import { Link } from "@tanstack/react-router"
+import { ArrowUpRight, Ellipsis, Pencil, Plus, Trash2 } from "lucide-react"
+import { useApp } from "@/lib/app-context"
+import { deleteDeck } from "@/lib/db"
+import { queueFor, type Deck } from "@/lib/model"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from './ui/dropdown-menu'
-import { Confirm, DeckIcon } from './shared'
-import { notify, reportError } from './ui/toast'
-import { Progress } from './ui/progress'
+} from "@/components/ui/dropdown-menu"
+import { Confirm, DeckIcon } from "@/components/shared"
+import { notify, reportError } from "@/components/ui/toast"
+import { Progress } from "@/components/ui/progress"
 
 export function DeckTile({
   deck,
@@ -42,7 +42,7 @@ export function DeckTile({
     setBusy(true)
     try {
       await deleteDeck(deck.id)
-      notify('Deck deleted')
+      notify("Deck deleted")
       setConfirm(false)
     } catch (error) {
       reportError(error)
@@ -52,7 +52,7 @@ export function DeckTile({
   }
   return (
     <>
-      <Card className={`deck-tile ${list ? 'deck-tile-list' : ''}`}>
+      <Card className={`deck-tile ${list ? "deck-tile-list" : ""}`}>
         <div className="deck-tile-top">
           <DeckIcon deck={deck} />
           <DropdownMenu>
@@ -98,7 +98,7 @@ export function DeckTile({
           </h3>
           <p>
             {deck.description ||
-              'A new collection of things worth remembering.'}
+              "A new collection of things worth remembering."}
           </p>
         </Link>
         <div className="deck-tags">
@@ -120,9 +120,9 @@ export function DeckTile({
           />
         </div>
         <div className="deck-tile-footer">
-          <span className={due ? 'due-label' : 'text-muted-foreground'}>
-            <span className={due ? 'status-dot' : 'quiet-dot'} />
-            {due ? `${due} to review` : 'All caught up'}
+          <span className={due ? "due-label" : "text-muted-foreground"}>
+            <span className={due ? "status-dot" : "quiet-dot"} />
+            {due ? `${due} to review` : "All caught up"}
           </span>
           <Button
             variant="ghost"
@@ -130,7 +130,7 @@ export function DeckTile({
             nativeButton={false}
             render={<Link to="/study" search={{ deck: deck.id }} />}
           >
-            {due ? 'Review' : 'Open review'}
+            {due ? "Review" : "Open review"}
             <ArrowUpRight />
           </Button>
         </div>

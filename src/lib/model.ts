@@ -1,13 +1,13 @@
-import { z } from 'zod'
-import { createEmptyCard, fsrs, Rating, type Card as FSRSCard } from 'ts-fsrs'
+import { z } from "zod"
+import { createEmptyCard, fsrs, Rating, type Card as FSRSCard } from "ts-fsrs"
 
 export const colors = [
-  'sage',
-  'blue',
-  'peach',
-  'violet',
-  'rose',
-  'sand',
+  "sage",
+  "blue",
+  "peach",
+  "violet",
+  "rose",
+  "sand",
 ] as const
 const id = z.string().min(1).max(100)
 const text = z.string().max(200000)
@@ -30,7 +30,7 @@ export const deckSchema = z.object({
   name: z.string().trim().min(1).max(80),
   description: z.string().max(240),
   color: z.enum(colors),
-  icon: z.enum(['languages', 'sparkles', 'code', 'book', 'globe', 'leaf']),
+  icon: z.enum(["languages", "sparkles", "code", "book", "globe", "leaf"]),
   tags,
   createdAt: time,
 })
@@ -51,7 +51,7 @@ export const reviewSchema = z.object({
   id,
   cardId: id,
   deckId: id,
-  direction: z.enum(['forward', 'backward']),
+  direction: z.enum(["forward", "backward"]),
   rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
   at: time,
 })
@@ -59,8 +59,8 @@ export type Deck = z.infer<typeof deckSchema>
 export type Flashcard = z.infer<typeof cardSchema>
 export type Review = z.infer<typeof reviewSchema>
 export type Schedule = z.infer<typeof scheduleSchema>
-export type Direction = Review['direction']
-export type Grade = Review['rating']
+export type Direction = Review["direction"]
+export type Grade = Review["rating"]
 export interface Asset {
   id: string
   name: string
@@ -102,11 +102,11 @@ export function gradeCard(schedule: Schedule, grade: Grade, now = Date.now()) {
 export function queueFor(cards: Flashcard[], now = Date.now()): QueueItem[] {
   return cards
     .flatMap((card) =>
-      (['forward', ...(card.reverse ? ['backward'] : [])] as Direction[])
+      (["forward", ...(card.reverse ? ["backward"] : [])] as Direction[])
         .filter((direction) => card[direction].due <= now)
         .map((direction) => ({ card, direction })),
     )
-    .sort((a, b) => a.card[a.direction].due - b.card[b.direction].due)
+    .toSorted((a, b) => a.card[a.direction].due - b.card[b.direction].due)
 }
 export function referencedAssetIds(cards: Flashcard[]) {
   return new Set(
@@ -123,7 +123,7 @@ export function parseTags(value: string) {
   return [
     ...new Set(
       value
-        .split(',')
+        .split(",")
         .map((v) => v.trim().toLowerCase())
         .filter(Boolean),
     ),
@@ -135,8 +135,8 @@ export function intervalLabel(due: number, now = Date.now()) {
   if (minutes < 1440) return `${Math.round(minutes / 60)}h`
   return `${Math.round(minutes / 1440)}d`
 }
-export function dateKey(time: number) {
-  const d = new Date(time)
+export function dateKey(timestamp: number) {
+  const d = new Date(timestamp)
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
 }
 export function streakFor(reviews: Review[], now = new Date()) {

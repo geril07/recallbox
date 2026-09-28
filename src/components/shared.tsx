@@ -7,12 +7,16 @@ import {
   Sparkles,
   Inbox,
   Loader2,
-} from 'lucide-react'
-import type { ComponentProps, ReactNode } from 'react'
-import { Button } from './ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
-import { cn } from '@/lib/utils'
-import type { Deck } from '@/lib/model'
+} from "lucide-react"
+import type { ComponentProps, ReactNode } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+import type { Deck } from "@/lib/model"
 import {
   AlertDialog,
   AlertDialogContent,
@@ -20,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-} from './ui/alert-dialog'
+} from "@/components/ui/alert-dialog"
 
 export const deckIcons = {
   languages: Languages,
@@ -34,16 +38,16 @@ export function DeckIcon({
   deck,
   small = false,
 }: {
-  deck: Pick<Deck, 'icon' | 'color'>
+  deck: Pick<Deck, "icon" | "color">
   small?: boolean
 }) {
   const Icon = deckIcons[deck.icon]
   return (
     <span
       className={cn(
-        'deck-icon',
+        "deck-icon",
         `color-${deck.color}`,
-        small && 'deck-icon-sm',
+        small && "deck-icon-sm",
       )}
     >
       <Icon strokeWidth={1.65} />
@@ -102,7 +106,7 @@ export function Confirm({
   onConfirm,
   onClose,
   busy = false,
-  label = 'Delete',
+  label = "Delete",
   destructive = true,
 }: {
   title: string
@@ -130,7 +134,7 @@ export function Confirm({
             Cancel
           </Button>
           <Button
-            variant={destructive ? 'destructive' : 'default'}
+            variant={destructive ? "destructive" : "default"}
             onClick={onConfirm}
             disabled={busy}
           >

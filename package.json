@@ -1,7 +1,7 @@
 {
   "name": "recallbox",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "test": "vitest run",
     "icons": "node scripts/build-icons.mjs",
     "test:e2e": "playwright test",
-    "format": "prettier --write src tests *.ts *.json *.md"
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -45,8 +46,8 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "fake-indexeddb": "^6.2.5",
+    "oxfmt": "^0.71.0",
     "oxlint": "^1.81.0",
-    "prettier": "^3.9.9",
     "sharp": "^0.35.5",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",

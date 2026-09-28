@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useEffect, useRef, useState } from "react"
+import { useLiveQuery } from "dexie-react-hooks"
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -14,9 +14,9 @@ import {
   ShieldCheck,
   Sun,
   Unplug,
-} from 'lucide-react'
-import { useApp } from '@/lib/app-context'
-import { db, setSetting } from '@/lib/db'
+} from "lucide-react"
+import { useApp } from "@/lib/app-context"
+import { db, setSetting } from "@/lib/db"
 import {
   backupName,
   createBackup,
@@ -24,7 +24,7 @@ import {
   readBackup,
   restoreBackup,
   type Backup,
-} from '@/lib/backup'
+} from "@/lib/backup"
 import {
   connectDrive,
   disconnectDrive,
@@ -34,16 +34,23 @@ import {
   loadGoogleIdentity,
   uploadDriveBackup,
   type DriveFile,
-} from '@/lib/drive'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Confirm, IconButton } from '@/components/shared'
-import { notify, reportError } from '@/components/ui/toast'
+} from "@/lib/drive"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Confirm, IconButton } from "@/components/shared"
+import { notify, reportError } from "@/components/ui/toast"
+
+async function exportZip() {
+  const blob = await createBackup()
+  downloadBlob(blob, backupName())
+  await setSetting("lastBackup", new Date().toISOString())
+  notify("Backup prepared for download")
+}
 
 export function Settings() {
   const { decks, cards, theme, toggleTheme } = useApp()
-  const [busy, setBusy] = useState('')
+  const [busy, setBusy] = useState("")
   const [backup, setBackup] = useState<Backup | null>(null)
   const [googleReady, setGoogleReady] = useState(false)
   const [googleError, setGoogleError] = useState(false)
@@ -58,7 +65,7 @@ export function Settings() {
     persisted?: boolean
   }>({})
   const input = useRef<HTMLInputElement>(null)
-  const lastBackup = useLiveQuery(() => db.settings.get('lastBackup'))
+  const lastBackup = useLiveQuery(() => db.settings.get("lastBackup"))
   useEffect(() => {
     void (async () => {
       try {
@@ -90,21 +97,15 @@ export function Settings() {
     } catch (error) {
       reportError(error)
     } finally {
-      setBusy('')
+      setBusy("")
     }
-  }
-  async function exportZip() {
-    const blob = await createBackup()
-    downloadBlob(blob, backupName())
-    await setSetting('lastBackup', new Date().toISOString())
-    notify('Backup prepared for download')
   }
   async function restore() {
     if (!backup) return
-    await run('restore', async () => {
+    await run("restore", async () => {
       await restoreBackup(backup)
       setBackup(null)
-      notify('Library restored, including images and progress')
+      notify("Library restored, including images and progress")
     })
   }
   return (
@@ -134,22 +135,22 @@ export function Settings() {
             </div>
             <div className="theme-options">
               <Button
-                variant={theme === 'light' ? 'secondary' : 'ghost'}
+                variant={theme === "light" ? "secondary" : "ghost"}
                 onClick={() => {
-                  if (theme !== 'light') toggleTheme()
+                  if (theme !== "light") toggleTheme()
                 }}
               >
                 <Sun />
-                Light{theme === 'light' && <Check className="size-3" />}
+                Light{theme === "light" && <Check className="size-3" />}
               </Button>
               <Button
-                variant={theme === 'dark' ? 'secondary' : 'ghost'}
+                variant={theme === "dark" ? "secondary" : "ghost"}
                 onClick={() => {
-                  if (theme !== 'dark') toggleTheme()
+                  if (theme !== "dark") toggleTheme()
                 }}
               >
                 <Moon />
-                Dark{theme === 'dark' && <Check className="size-3" />}
+                Dark{theme === "dark" && <Check className="size-3" />}
               </Button>
             </div>
           </div>
@@ -174,7 +175,7 @@ export function Settings() {
                 {decks.length} decks · {cards.length} cards
                 {storage.usage !== undefined
                   ? ` · ${(storage.usage / 1024 / 1024).toFixed(1)} MB used by this site`
-                  : ''}
+                  : ""}
               </p>
             </div>
             <ShieldCheck className="size-5 text-primary" />
@@ -183,32 +184,32 @@ export function Settings() {
             <div>
               <h3>
                 {storage.persisted
-                  ? 'Persistent storage enabled'
-                  : 'Protect local storage'}
+                  ? "Persistent storage enabled"
+                  : "Protect local storage"}
               </h3>
               <p>
                 {storage.persisted
-                  ? 'Your browser will not automatically evict this site’s data.'
-                  : 'Ask your browser to keep Recallbox data on this device.'}
+                  ? "Your browser will not automatically evict this site’s data."
+                  : "Ask your browser to keep Recallbox data on this device."}
               </p>
             </div>
             <Button
               variant="outline"
               disabled={storage.persisted || !!busy}
               onClick={() =>
-                run('persist', async () => {
+                run("persist", async () => {
                   const persisted = await navigator.storage?.persist()
                   setStorage((s) => ({ ...s, persisted }))
                   notify(
                     persisted
-                      ? 'Persistent storage enabled'
-                      : 'Your browser did not grant persistent storage. Keep regular backups.',
+                      ? "Persistent storage enabled"
+                      : "Your browser did not grant persistent storage. Keep regular backups.",
                   )
                 })
               }
             >
               {storage.persisted ? <Check /> : <ShieldCheck />}
-              {storage.persisted ? 'Protected' : 'Protect'}
+              {storage.persisted ? "Protected" : "Protect"}
             </Button>
           </div>
           <div className="settings-info">
@@ -243,9 +244,9 @@ export function Settings() {
             <Button
               variant="outline"
               disabled={!!busy}
-              onClick={() => run('export', exportZip)}
+              onClick={() => run("export", exportZip)}
             >
-              {busy === 'export' ? (
+              {busy === "export" ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <ArrowDownToLine />
@@ -265,7 +266,7 @@ export function Settings() {
               disabled={!!busy}
               onClick={() => input.current?.click()}
             >
-              {busy === 'import' ? (
+              {busy === "import" ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <ArrowUpFromLine />
@@ -281,9 +282,9 @@ export function Settings() {
             aria-label="Import backup file"
             onChange={(e) => {
               const file = e.target.files?.[0]
-              e.target.value = ''
+              e.target.value = ""
               if (file)
-                void run('import', async () =>
+                void run("import", async () =>
                   setBackup(await readBackup(file)),
                 )
             }}
@@ -327,7 +328,7 @@ export function Settings() {
                   disconnectDrive()
                   setConnected(false)
                   setDrive(null)
-                  notify('Google Drive disconnected')
+                  notify("Google Drive disconnected")
                 }}
                 disabled={!!busy}
               >
@@ -338,15 +339,15 @@ export function Settings() {
                 variant="outline"
                 disabled={!googleReady || !!busy}
                 onClick={() =>
-                  run('connect', async () => {
+                  run("connect", async () => {
                     await connectDrive()
                     setConnected(true)
                     setDrive(await listDriveBackups())
-                    notify('Google Drive connected')
+                    notify("Google Drive connected")
                   })
                 }
               >
-                {busy === 'connect' && <Loader2 className="animate-spin" />}
+                {busy === "connect" && <Loader2 className="animate-spin" />}
                 Connect Drive
               </Button>
             )}
@@ -355,7 +356,7 @@ export function Settings() {
             <div className="settings-info">
               <Cloud size={15} />
               <p>
-                Google Drive setup is needed for this installation. Set{' '}
+                Google Drive setup is needed for this installation. Set{" "}
                 <code>VITE_GOOGLE_CLIENT_ID</code> in <code>.env.local</code>.
                 See <code>README.md</code> for the Google Cloud steps. ZIP
                 backups work without it.
@@ -383,14 +384,14 @@ export function Settings() {
                 <Button
                   disabled={!!busy}
                   onClick={() =>
-                    run('upload', async () => {
+                    run("upload", async () => {
                       await uploadDriveBackup()
                       setDrive(await listDriveBackups())
-                      notify('Backup saved to Google Drive')
+                      notify("Backup saved to Google Drive")
                     })
                   }
                 >
-                  {busy === 'upload' ? (
+                  {busy === "upload" ? (
                     <Loader2 className="animate-spin" />
                   ) : (
                     <Cloud />
@@ -406,7 +407,7 @@ export function Settings() {
                   <IconButton
                     label="Reconnect Google Drive"
                     onClick={() =>
-                      run('reconnect', async () => {
+                      run("reconnect", async () => {
                         await connectDrive()
                         setDrive(await listDriveBackups())
                       })
@@ -418,7 +419,7 @@ export function Settings() {
                   <IconButton
                     label="Refresh backups"
                     onClick={() =>
-                      run('refresh', async () =>
+                      run("refresh", async () =>
                         setDrive(await listDriveBackups()),
                       )
                     }
@@ -433,6 +434,7 @@ export function Settings() {
                       render={
                         <a
                           href={`https://drive.google.com/drive/folders/${drive.folderId}`}
+                          aria-label="Open Recallbox folder in Google Drive"
                           target="_blank"
                           rel="noopener noreferrer"
                         />
@@ -457,7 +459,7 @@ export function Settings() {
                       label={`Restore ${file.name}`}
                       disabled={!!busy}
                       onClick={() =>
-                        run('download', async () =>
+                        run("download", async () =>
                           setBackup(
                             await readBackup(await downloadDriveBackup(file)),
                           ),
@@ -491,7 +493,7 @@ export function Settings() {
           title="Replace your local library?"
           description={`This backup contains ${backup.manifest.decks.length} decks, ${backup.manifest.cards.length} cards, and ${backup.assets.length} images. Your current library will be replaced, not merged. Export it first if you want to keep it.`}
           label="Restore backup"
-          busy={busy === 'restore'}
+          busy={busy === "restore"}
           onConfirm={restore}
           onClose={() => setBackup(null)}
         />

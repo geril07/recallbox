@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { motion } from 'motion/react'
+import { useState } from "react"
+import { Link } from "@tanstack/react-router"
+import { motion } from "motion/react"
 import {
   ArrowRight,
   ArrowUpRight,
@@ -13,21 +13,21 @@ import {
   Sparkles,
   Target,
   X,
-} from 'lucide-react'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { useApp } from '@/lib/app-context'
-import { db, setSetting } from '@/lib/db'
-import { dateKey, queueFor, streakFor } from '@/lib/model'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { DeckTile } from '@/components/deck-tile'
-import { EmptyState, IconButton } from '@/components/shared'
+} from "lucide-react"
+import { useLiveQuery } from "dexie-react-hooks"
+import { useApp } from "@/lib/app-context"
+import { db, setSetting } from "@/lib/db"
+import { dateKey, queueFor, streakFor } from "@/lib/model"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { DeckTile } from "@/components/deck-tile"
+import { EmptyState, IconButton } from "@/components/shared"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { reportError } from '@/components/ui/toast'
+} from "@/components/ui/tooltip"
+import { reportError } from "@/components/ui/toast"
 
 export function WeekActivity({ compact = false }: { compact?: boolean }) {
   const { reviews, now } = useApp()
@@ -41,13 +41,13 @@ export function WeekActivity({ compact = false }: { compact?: boolean }) {
   )
   const max = Math.max(5, ...counts)
   return (
-    <div className={compact ? 'week-chart compact' : 'week-chart'}>
+    <div className={compact ? "week-chart compact" : "week-chart"}>
       {days.map((d, i) => (
         <Tooltip key={+d}>
           <TooltipTrigger
             render={
               <button
-                className={`week-column ${i === 6 ? 'today' : ''}`}
+                className={`week-column ${i === 6 ? "today" : ""}`}
                 aria-label={`${d.toLocaleDateString()}: ${counts[i]} reviews`}
               />
             }
@@ -58,14 +58,14 @@ export function WeekActivity({ compact = false }: { compact?: boolean }) {
               />
             </span>
             <span className="week-day">
-              {d.toLocaleDateString('en', { weekday: 'narrow' })}
+              {d.toLocaleDateString("en", { weekday: "narrow" })}
             </span>
           </TooltipTrigger>
           <TooltipContent>
             {d.toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            })}{' '}
+              month: "short",
+              day: "numeric",
+            })}{" "}
             · {counts[i]} reviews
           </TooltipContent>
         </Tooltip>
@@ -75,8 +75,8 @@ export function WeekActivity({ compact = false }: { compact?: boolean }) {
 }
 export function Overview() {
   const { decks, cards, reviews, now, editDeck } = useApp()
-  const [filter, setFilter] = useState<'all' | 'due'>('all')
-  const starter = useLiveQuery(() => db.settings.get('starterNotice'))
+  const [filter, setFilter] = useState<"all" | "due">("all")
+  const starter = useLiveQuery(() => db.settings.get("starterNotice"))
   const due = queueFor(cards, now).length
   const reviewedToday = reviews.filter(
     (r) => dateKey(r.at) === dateKey(now),
@@ -89,7 +89,7 @@ export function Overview() {
     : null
   const visible = decks.filter(
     (d) =>
-      filter === 'all' ||
+      filter === "all" ||
       queueFor(
         cards.filter((c) => c.deckId === d.id),
         now,
@@ -143,17 +143,17 @@ export function Overview() {
             nativeButton={false}
             render={
               <Link
-                to={due ? '/study' : '/decks'}
+                to={due ? "/study" : "/decks"}
                 search={{ deck: undefined }}
               />
             }
           >
-            {due ? 'Start reviewing' : 'Explore your decks'}
+            {due ? "Start reviewing" : "Explore your decks"}
             <ArrowRight />
             <span className="hero-button-divider" />
             {due
               ? `~${Math.max(1, Math.ceil((due * 15) / 60))} min`
-              : 'Your library'}
+              : "Your library"}
           </Button>
         </div>
         <div className="hero-art" aria-hidden="true">
@@ -191,36 +191,36 @@ export function Overview() {
       <section className="stats-grid" aria-label="Learning statistics">
         {[
           {
-            label: 'Ready to review',
+            label: "Ready to review",
             value: due,
             icon: Layers,
-            note: 'a fresh chance to remember',
-            color: 'sage',
+            note: "a fresh chance to remember",
+            color: "sage",
           },
           {
-            label: 'Reviewed today',
+            label: "Reviewed today",
             value: reviewedToday,
             icon: CheckCheck,
-            note: 'one step further',
-            color: 'blue',
+            note: "one step further",
+            color: "blue",
           },
           {
-            label: 'Current streak',
+            label: "Current streak",
             value: `${streak}`,
-            suffix: streak === 1 ? 'day' : 'days',
+            suffix: streak === 1 ? "day" : "days",
             icon: Flame,
-            note: 'consistency over intensity',
-            color: 'peach',
+            note: "consistency over intensity",
+            color: "peach",
           },
           {
-            label: 'Recall rate',
-            value: retention === null ? '—' : `${retention}%`,
+            label: "Recall rate",
+            value: retention === null ? "—" : `${retention}%`,
             icon: Target,
             note:
               retention === null
-                ? 'your story starts here'
-                : 'across all your reviews',
-            color: 'violet',
+                ? "your story starts here"
+                : "across all your reviews",
+            color: "violet",
           },
         ].map((stat) => (
           <Card key={stat.label} className="stat-card">
@@ -261,16 +261,16 @@ export function Overview() {
             aria-label="Filter decks"
           >
             <Button
-              variant={filter === 'all' ? 'secondary' : 'ghost'}
+              variant={filter === "all" ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => setFilter('all')}
+              onClick={() => setFilter("all")}
             >
               All decks
             </Button>
             <Button
-              variant={filter === 'due' ? 'secondary' : 'ghost'}
+              variant={filter === "due" ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => setFilter('due')}
+              onClick={() => setFilter("due")}
             >
               Due for review
               <span className="tiny-dot" />
@@ -285,14 +285,14 @@ export function Overview() {
           ) : (
             <EmptyState
               title={
-                filter === 'due'
-                  ? 'A clear mind, a clear queue.'
-                  : 'Your first deck awaits.'
+                filter === "due"
+                  ? "A clear mind, a clear queue."
+                  : "Your first deck awaits."
               }
               description={
-                filter === 'due'
-                  ? 'Come back when your next reviews are due.'
-                  : 'Collect the things you want to remember.'
+                filter === "due"
+                  ? "Come back when your next reviews are due."
+                  : "Collect the things you want to remember."
               }
             >
               <Button onClick={() => editDeck()}>
@@ -316,7 +316,7 @@ export function Overview() {
               <span>
                 <strong>
                   {reviews.filter((r) => r.at >= now - 7 * 86400000).length}
-                </strong>{' '}
+                </strong>{" "}
                 reviews this week
               </span>
               <span className="activity-summary-icon">
@@ -349,7 +349,7 @@ export function Overview() {
           </Card>
         </aside>
       </div>
-      {starter?.value === 'true' && (
+      {starter?.value === "true" && (
         <div className="starter-notice">
           <span className="flex items-center gap-2">
             <Sparkles size={14} />
@@ -362,7 +362,7 @@ export function Overview() {
             label="Dismiss starter note"
             size="icon-xs"
             onClick={() =>
-              setSetting('starterNotice', 'false').catch(reportError)
+              setSetting("starterNotice", "false").catch(reportError)
             }
           >
             <X />

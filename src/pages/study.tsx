@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useSearch } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'motion/react'
+import { useEffect, useRef, useState } from "react"
+import { Link, useSearch } from "@tanstack/react-router"
+import { AnimatePresence, motion } from "motion/react"
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -12,20 +12,20 @@ import {
   RotateCcw,
   Sparkles,
   X,
-} from 'lucide-react'
-import { useApp } from '@/lib/app-context'
-import { reviewCard } from '@/lib/db'
-import { gradeCard, intervalLabel, queueFor, type Grade } from '@/lib/model'
-import { Markdown } from '@/components/markdown'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
-import { DeckIcon, IconButton } from '@/components/shared'
-import { reportError } from '@/components/ui/toast'
+} from "lucide-react"
+import { useApp } from "@/lib/app-context"
+import { reviewCard } from "@/lib/db"
+import { gradeCard, intervalLabel, queueFor, type Grade } from "@/lib/model"
+import { Markdown } from "@/components/markdown"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import { DeckIcon, IconButton } from "@/components/shared"
+import { reportError } from "@/components/ui/toast"
 
 export function Study() {
-  const { deck: deckId } = useSearch({ from: '/study' })
+  const { deck: deckId } = useSearch({ from: "/study" })
   const { cards, decks, now } = useApp()
   const [queue, setQueue] = useState(() =>
     queueFor(cards.filter((c) => !deckId || c.deckId === deckId)),
@@ -70,17 +70,17 @@ export function Study() {
         )
       )
         return
-      if (e.code === 'Space' && current && !revealed) {
+      if (e.code === "Space" && current && !revealed) {
         e.preventDefault()
         setRevealed(true)
       }
-      if (revealed && ['1', '2', '3', '4'].includes(e.key)) {
+      if (revealed && ["1", "2", "3", "4"].includes(e.key)) {
         e.preventDefault()
         void rate(Number(e.key) as Grade)
       }
     }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
   })
   function restart() {
     setQueue(queueFor(cards.filter((c) => !deckId || c.deckId === deckId)))
@@ -111,16 +111,16 @@ export function Study() {
         </div>
         <div className="eyebrow">
           {queue.length
-            ? 'A LITTLE MORE, REMEMBERED'
-            : 'A MOMENT TO LET IT SINK IN'}
+            ? "A LITTLE MORE, REMEMBERED"
+            : "A MOMENT TO LET IT SINK IN"}
         </div>
         <h1>
-          {queue.length ? 'That’s time well spent.' : 'You’re all caught up.'}
+          {queue.length ? "That’s time well spent." : "You’re all caught up."}
         </h1>
         <p>
           {queue.length
-            ? 'Small steps make lasting memories. Nice work showing up.'
-            : 'Your next reviews will appear when they’re ready.'}
+            ? "Small steps make lasting memories. Nice work showing up."
+            : "Your next reviews will appear when they’re ready."}
         </p>
         {queue.length > 0 && (
           <div className="completion-stats">
@@ -170,11 +170,11 @@ export function Study() {
     )
   }
   const prompt =
-    current.direction === 'forward'
+    current.direction === "forward"
       ? current.card.prompt
       : current.card.reversePrompt || current.card.answer
   const answer =
-    current.direction === 'forward' ? current.card.answer : current.card.prompt
+    current.direction === "forward" ? current.card.answer : current.card.prompt
   return (
     <div className="study-page">
       <div className="study-topline">
@@ -210,13 +210,13 @@ export function Study() {
           </>
         )}
         <Badge variant="outline">
-          {current.direction === 'backward' ? (
+          {current.direction === "backward" ? (
             <>
               <ArrowLeftRight />
               Reverse
             </>
           ) : (
-            'Forward'
+            "Forward"
           )}
         </Badge>
       </div>
@@ -237,7 +237,7 @@ export function Study() {
               <motion.div
                 className="study-answer"
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
               >
                 <span className="eyebrow">THE ANSWER</span>
                 <Markdown>{answer}</Markdown>
@@ -253,8 +253,8 @@ export function Study() {
               </div>
               <span>
                 {current.card[current.direction].reps === 0
-                  ? 'New card'
-                  : 'Spaced review'}
+                  ? "New card"
+                  : "Spaced review"}
               </span>
             </div>
           </Card>
@@ -285,24 +285,24 @@ export function Study() {
           <div className="rating-grid">
             {(
               [
-                { grade: 1, label: 'Again', help: 'I forgot', color: 'rose' },
+                { grade: 1, label: "Again", help: "I forgot", color: "rose" },
                 {
                   grade: 2,
-                  label: 'Hard',
-                  help: 'With effort',
-                  color: 'peach',
+                  label: "Hard",
+                  help: "With effort",
+                  color: "peach",
                 },
                 {
                   grade: 3,
-                  label: 'Good',
-                  help: 'Got it right',
-                  color: 'sage',
+                  label: "Good",
+                  help: "Got it right",
+                  color: "sage",
                 },
                 {
                   grade: 4,
-                  label: 'Easy',
-                  help: 'Knew it instantly',
-                  color: 'blue',
+                  label: "Easy",
+                  help: "Knew it instantly",
+                  color: "blue",
                 },
               ] as const
             ).map((r) => (

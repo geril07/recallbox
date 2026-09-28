@@ -19,7 +19,8 @@ npm run preview     # serve the production PWA
 npm test            # storage, scheduling, and ZIP integrity tests
 npm run test:e2e    # desktop + Android-sized Chromium tests
 npm run lint
-npm run format
+npm run format       # format the project with Oxfmt
+npm run format:check # check formatting without writing
 ```
 
 If Chromium is not installed for Playwright, run `npx playwright install chromium` once. Build before running the browser tests. Browser tests also check accessibility, image persistence, backup restore, and offline reviews.
@@ -86,7 +87,7 @@ Started from the official **Vite React + TypeScript** template. Components were 
 - `src/index.css`: centralized theme/color tokens and responsive app layouts.
 - `tests/`: unit and browser tests.
 
-Versions are recorded in `package-lock.json`. Use `npm ci` for repeatable installation. Fonts are bundled locally; no font CDN is needed.
+Versions are recorded in `package-lock.json`. Use `npm ci` for repeatable installation. Fonts are bundled locally; no font CDN is needed. Oxfmt uses two-space indentation, double quotes, and no semicolons. Source imports use `@/` (including unit tests); Oxlint rejects relative imports. Vite and Vitest both resolve the alias.
 
 ## Deployment
 

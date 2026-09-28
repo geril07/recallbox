@@ -4,26 +4,26 @@ import {
   createRouter,
   lazyRouteComponent,
   Link,
-} from '@tanstack/react-router'
-import { Layout } from './components/layout'
-import { Overview } from './pages/overview'
-const Decks = lazyRouteComponent(() => import('./pages/library'), 'Decks')
+} from "@tanstack/react-router"
+import { Layout } from "@/components/layout"
+import { Overview } from "@/pages/overview"
+const Decks = lazyRouteComponent(() => import("@/pages/library"), "Decks")
 const DeckDetail = lazyRouteComponent(
-  () => import('./pages/library'),
-  'DeckDetail',
+  () => import("@/pages/library"),
+  "DeckDetail",
 )
-const TagsPage = lazyRouteComponent(() => import('./pages/library'), 'TagsPage')
+const TagsPage = lazyRouteComponent(() => import("@/pages/library"), "TagsPage")
 const Activity = lazyRouteComponent(
-  () => import('./pages/activity'),
-  'Activity',
+  () => import("@/pages/activity"),
+  "Activity",
 )
-const Study = lazyRouteComponent(() => import('./pages/study'), 'Study')
+const Study = lazyRouteComponent(() => import("@/pages/study"), "Study")
 const Settings = lazyRouteComponent(
-  () => import('./pages/settings'),
-  'Settings',
+  () => import("@/pages/settings"),
+  "Settings",
 )
-import { Button } from './components/ui/button'
-import { EmptyState } from './components/shared'
+import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/shared"
 
 const rootRoute = createRootRoute({
   component: Layout,
@@ -44,7 +44,7 @@ const rootRoute = createRootRoute({
         description={
           error instanceof Error
             ? error.message
-            : 'Please check that browser storage is available.'
+            : "Please check that browser storage is available."
         }
       >
         <Button onClick={() => location.reload()}>Try again</Button>
@@ -54,45 +54,45 @@ const rootRoute = createRootRoute({
 })
 const overviewRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: "/",
   component: Overview,
 })
 const decksRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/decks',
+  path: "/decks",
   component: Decks,
   validateSearch: (search: Record<string, unknown>): { tag?: string } => ({
-    tag: typeof search.tag === 'string' ? search.tag : undefined,
+    tag: typeof search.tag === "string" ? search.tag : undefined,
   }),
 })
 const deckRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/decks/$deckId',
+  path: "/decks/$deckId",
   component: DeckDetail,
   remountDeps: ({ params }) => params.deckId,
 })
 const tagsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/tags',
+  path: "/tags",
   component: TagsPage,
 })
 const activityRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/activity',
+  path: "/activity",
   component: Activity,
 })
 const studyRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/study',
+  path: "/study",
   component: Study,
   validateSearch: (search: Record<string, unknown>): { deck?: string } => ({
-    deck: typeof search.deck === 'string' ? search.deck : undefined,
+    deck: typeof search.deck === "string" ? search.deck : undefined,
   }),
   remountDeps: ({ search }) => search.deck,
 })
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/settings',
+  path: "/settings",
   component: Settings,
 })
 export const router = createRouter({
@@ -107,7 +107,7 @@ export const router = createRouter({
   ]),
   scrollRestoration: true,
 })
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router
   }

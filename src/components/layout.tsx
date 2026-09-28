@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, Outlet, useRouterState } from '@tanstack/react-router'
+import { useEffect, useState } from "react"
+import { Link, Outlet, useRouterState } from "@tanstack/react-router"
 import {
   ArrowUpRight,
   BarChart3,
@@ -17,26 +17,26 @@ import {
   Sun,
   Tags,
   X,
-} from 'lucide-react'
-import { useLibrary } from '@/lib/db'
-import { AppContext } from '@/lib/app-context'
-import { queueFor, type Deck, type Flashcard } from '@/lib/model'
-import { DeckEditor, CardEditor } from './editors'
-import { Button } from './ui/button'
+} from "lucide-react"
+import { useLibrary } from "@/lib/db"
+import { AppContext } from "@/lib/app-context"
+import { queueFor, type Deck, type Flashcard } from "@/lib/model"
+import { DeckEditor, CardEditor } from "@/components/editors"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from './ui/dialog'
-import { IconButton, Loading } from './shared'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/dialog"
+import { IconButton, Loading } from "@/components/shared"
+import { cn } from "@/lib/utils"
 
 const navigation = [
-  { to: '/', label: 'Overview', icon: House },
-  { to: '/decks', label: 'My decks', icon: Layers },
-  { to: '/tags', label: 'Tags', icon: Tags },
-  { to: '/activity', label: 'Activity', icon: BarChart3 },
+  { to: "/", label: "Overview", icon: House },
+  { to: "/decks", label: "My decks", icon: Layers },
+  { to: "/tags", label: "Tags", icon: Tags },
+  { to: "/activity", label: "Activity", icon: BarChart3 },
 ] as const
 export function Logo() {
   return (
@@ -85,15 +85,15 @@ function Navigation({
             to={item.to}
             onClick={onClose}
             className={cn(
-              'nav-item',
+              "nav-item",
               (path === item.to ||
-                (item.to === '/decks' && path.startsWith('/decks/'))) &&
-                'active',
+                (item.to === "/decks" && path.startsWith("/decks/"))) &&
+                "active",
             )}
           >
             <item.icon />
             <span>{item.label}</span>
-            {item.to === '/decks' && (
+            {item.to === "/decks" && (
               <span className="nav-count">{decks.length}</span>
             )}
           </Link>
@@ -140,7 +140,7 @@ function Navigation({
           <p>
             {due
               ? `${due} reviews are ready when you are.`
-              : 'Make room for something new.'}
+              : "Make room for something new."}
           </p>
           <Link to="/study" search={{ deck: undefined }}>
             Let’s make it stick <ArrowUpRight size={14} />
@@ -149,7 +149,7 @@ function Navigation({
         <Link
           to="/settings"
           onClick={onClose}
-          className={cn('nav-item', path === '/settings' && 'active')}
+          className={cn("nav-item", path === "/settings" && "active")}
         >
           <Settings2 />
           <span>Settings & backup</span>
@@ -174,8 +174,8 @@ export function Layout() {
   const [clock, setClock] = useState(Date.now)
   const now = Math.max(clock, library?.loadedAt ?? clock)
   const [online, setOnline] = useState(navigator.onLine)
-  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
-    localStorage.getItem('recallbox-theme') === 'dark' ? 'dark' : 'light',
+  const [theme, setTheme] = useState<"light" | "dark">(() =>
+    localStorage.getItem("recallbox-theme") === "dark" ? "dark" : "light",
   )
   const path = useRouterState({ select: (s) => s.location.pathname })
   useEffect(() => {
@@ -183,26 +183,26 @@ export function Layout() {
     return () => clearInterval(timer)
   }, [])
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('recallbox-theme', theme)
+    document.documentElement.classList.toggle("dark", theme === "dark")
+    localStorage.setItem("recallbox-theme", theme)
   }, [theme])
   useEffect(() => {
     const update = () => setOnline(navigator.onLine)
-    window.addEventListener('online', update)
-    window.addEventListener('offline', update)
+    window.addEventListener("online", update)
+    window.addEventListener("offline", update)
     return () => {
-      window.removeEventListener('online', update)
-      window.removeEventListener('offline', update)
+      window.removeEventListener("online", update)
+      window.removeEventListener("offline", update)
     }
   }, [])
   if (!library) return <Loading />
-  const title = path.startsWith('/decks/')
-    ? 'My decks'
-    : path === '/study'
-      ? 'Review session'
-      : path === '/settings'
-        ? 'Settings & backup'
-        : navigation.find((n) => n.to === path)?.label || 'Overview'
+  const title = path.startsWith("/decks/")
+    ? "My decks"
+    : path === "/study"
+      ? "Review session"
+      : path === "/settings"
+        ? "Settings & backup"
+        : navigation.find((n) => n.to === path)?.label || "Overview"
   const due = queueFor(library.cards, now).length
   const navProps = {
     decks: library.decks,
@@ -218,7 +218,7 @@ export function Layout() {
         editDeck: (deck) => setDeckEditor({ deck }),
         editCard: (card, deckId) => setCardEditor({ card, deckId }),
         theme,
-        toggleTheme: () => setTheme((t) => (t === 'light' ? 'dark' : 'light')),
+        toggleTheme: () => setTheme((t) => (t === "light" ? "dark" : "light")),
       }}
     >
       <div className="app-shell">
@@ -243,20 +243,20 @@ export function Layout() {
             <div className="flex items-center gap-3">
               <span className="local-pill">
                 <span className="status-dot" />
-                {online ? 'Stored on this device' : 'Offline · ready to learn'}
+                {online ? "Stored on this device" : "Offline · ready to learn"}
               </span>
               <span className="h-4 border-r" />
               <IconButton
                 label={
-                  theme === 'light'
-                    ? 'Switch to dark theme'
-                    : 'Switch to light theme'
+                  theme === "light"
+                    ? "Switch to dark theme"
+                    : "Switch to light theme"
                 }
                 onClick={() =>
-                  setTheme((t) => (t === 'light' ? 'dark' : 'light'))
+                  setTheme((t) => (t === "light" ? "dark" : "light"))
                 }
               >
-                {theme === 'light' ? <Moon /> : <Sun />}
+                {theme === "light" ? <Moon /> : <Sun />}
               </IconButton>
               <Link
                 to="/settings"
@@ -269,7 +269,7 @@ export function Layout() {
           </header>
           <main
             id="main-content"
-            className={cn('page-content', path === '/study' && 'study-content')}
+            className={cn("page-content", path === "/study" && "study-content")}
           >
             <Outlet />
           </main>

@@ -1,11 +1,11 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
-@import '@fontsource-variable/geist';
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 @theme inline {
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-sans: "Geist Variable", sans-serif;
   --font-heading: var(--font-sans);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -107,11 +107,11 @@
   }
   button,
   a,
-  [role='button'] {
+  [role="button"] {
     -webkit-tap-highlight-color: transparent;
   }
   button:not(:disabled),
-  [role='button']:not([aria-disabled='true']) {
+  [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;
   }
   a {
@@ -437,7 +437,7 @@
   font-size: 12px;
   line-height: 1.7;
 }
-.page-heading > [data-slot='button'] {
+.page-heading > [data-slot="button"] {
   flex-shrink: 0;
 }
 .review-hero {
@@ -487,13 +487,13 @@
 .hero-copy p strong {
   font-weight: 600;
 }
-.hero-copy [data-slot='button'] {
+.hero-copy [data-slot="button"] {
   font-size: 11px;
   padding-left: 14px;
   padding-right: 14px;
   gap: 11px;
 }
-.hero-copy [data-slot='button'] > svg {
+.hero-copy [data-slot="button"] > svg {
   width: 13px;
 }
 .hero-button-divider {
@@ -710,7 +710,7 @@
   margin-bottom: 17px;
   align-items: center;
 }
-.deck-filter-tabs [data-slot='button'] {
+.deck-filter-tabs [data-slot="button"] {
   font-size: 10px;
   padding: 0 10px;
 }
@@ -745,7 +745,7 @@
   justify-content: space-between;
   margin-bottom: 15px;
 }
-.deck-tile-top > [data-slot='dropdown-menu-trigger'] {
+.deck-tile-top > [data-slot="dropdown-menu-trigger"] {
   color: var(--muted-foreground);
   margin: -5px -7px 0 0;
 }
@@ -804,8 +804,8 @@
   align-items: center;
   gap: 5px;
 }
-.deck-tags [data-slot='badge'],
-.card-row [data-slot='badge'] {
+.deck-tags [data-slot="badge"],
+.card-row [data-slot="badge"] {
   font-size: 9px;
   font-weight: 400;
   border-radius: 4px;
@@ -823,11 +823,11 @@
   color: var(--muted-foreground);
   margin-bottom: 9px;
 }
-.deck-progress [data-slot='progress'] {
+.deck-progress [data-slot="progress"] {
   height: 3px;
   background: var(--muted);
 }
-.deck-progress [data-slot='progress-indicator'] {
+.deck-progress [data-slot="progress-indicator"] {
   background: var(--tone);
 }
 .deck-tile-footer {
@@ -844,11 +844,11 @@
   align-items: center;
   gap: 6px;
 }
-.deck-tile-footer [data-slot='button'] {
+.deck-tile-footer [data-slot="button"] {
   font-size: 10px;
   gap: 6px;
 }
-.deck-tile-footer [data-slot='button'] svg {
+.deck-tile-footer [data-slot="button"] svg {
   width: 13px;
 }
 .due-label {
@@ -1060,7 +1060,7 @@
   font-size: 11px;
   height: 36px;
 }
-.library-toolbar [data-slot='select-trigger'] {
+.library-toolbar [data-slot="select-trigger"] {
   background: var(--card);
   height: 36px;
   font-size: 11px;
@@ -1092,7 +1092,7 @@
 .deck-tile-list .deck-tile-top {
   margin: 0;
 }
-.deck-tile-list .deck-tile-top [data-slot='dropdown-menu-trigger'] {
+.deck-tile-list .deck-tile-top [data-slot="dropdown-menu-trigger"] {
   position: absolute;
   right: 15px;
   top: 17px;
@@ -1369,7 +1369,7 @@
   border-radius: 50%;
   border: 1px solid transparent;
 }
-.color-swatch[aria-pressed='true'] {
+.color-swatch[aria-pressed="true"] {
   border-color: var(--tone);
 }
 .editor-toolbar {
@@ -1542,7 +1542,7 @@
 .study-progress > span {
   white-space: nowrap;
 }
-.study-progress [data-slot='progress'] {
+.study-progress [data-slot="progress"] {
   height: 4px;
 }
 .study-deck-label {
@@ -1554,7 +1554,7 @@
   font-size: 11px;
   color: var(--muted-foreground);
 }
-.study-deck-label [data-slot='badge'] {
+.study-deck-label [data-slot="badge"] {
   font-size: 9px;
   font-weight: 400;
 }
@@ -1598,7 +1598,7 @@
   color: var(--muted-foreground);
   font-size: 10px;
 }
-.study-card-footer [data-slot='badge'] {
+.study-card-footer [data-slot="badge"] {
   font-weight: 400;
   font-size: 9px;
 }
@@ -1606,7 +1606,7 @@
   text-align: center;
   margin-top: 29px;
 }
-.study-controls > [data-slot='button'] {
+.study-controls > [data-slot="button"] {
   gap: 10px;
   height: 40px;
   padding: 0 20px;
@@ -1904,7 +1904,7 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-.setting-row h3 [data-slot='badge'] {
+.setting-row h3 [data-slot="badge"] {
   font-size: 8px;
   font-weight: 400;
 }
@@ -1919,7 +1919,7 @@
   display: block;
   margin-top: 6px;
 }
-.setting-row [data-slot='button'] {
+.setting-row [data-slot="button"] {
   font-size: 11px;
 }
 .theme-options {
@@ -2204,7 +2204,7 @@
     font-size: 8px;
     letter-spacing: 1.2px;
   }
-  .page-heading > [data-slot='button'] {
+  .page-heading > [data-slot="button"] {
     font-size: 10px;
     margin-top: 22px;
   }
@@ -2312,7 +2312,7 @@
     flex-wrap: wrap;
     margin-bottom: 22px;
   }
-  .page-heading > [data-slot='button'] {
+  .page-heading > [data-slot="button"] {
     margin-top: 0;
   }
   .page-heading p {
@@ -2388,7 +2388,7 @@
   .deck-main-link p {
     font-size: 11px;
   }
-  .deck-tags [data-slot='badge'] {
+  .deck-tags [data-slot="badge"] {
     font-size: 10px;
   }
   .deck-progress > div:first-child {
@@ -2399,7 +2399,7 @@
     padding-inline: 20px;
     font-size: 10px;
   }
-  .deck-tile-footer [data-slot='button'] {
+  .deck-tile-footer [data-slot="button"] {
     font-size: 11px;
   }
   .insights {
@@ -2433,7 +2433,7 @@
   .library-toolbar .search-field {
     flex-basis: 100%;
   }
-  .library-toolbar > [data-slot='select-trigger'] {
+  .library-toolbar > [data-slot="select-trigger"] {
     margin-right: auto;
   }
   .deck-tile-list {
@@ -2482,7 +2482,7 @@
   .deck-study-banner small {
     font-size: 9px;
   }
-  .deck-study-banner [data-slot='button'] {
+  .deck-study-banner [data-slot="button"] {
     font-size: 10px;
   }
   .card-table-header {
@@ -2504,7 +2504,7 @@
     grid-column: 2;
     grid-row: 1 / 3;
   }
-  .card-row [data-slot='badge'] {
+  .card-row [data-slot="badge"] {
     font-size: 8px;
   }
   .tag-card {
@@ -2548,7 +2548,7 @@
   .settings-section-label h2 {
     font-size: 13px;
   }
-  .theme-options [data-slot='button'] {
+  .theme-options [data-slot="button"] {
     font-size: 10px;
   }
   .settings-about small {
@@ -2643,7 +2643,7 @@
   .markdown table {
     font-size: 10px;
   }
-  [data-slot='button'][data-size='icon'] {
+  [data-slot="button"][data-size="icon"] {
     min-width: 36px;
     min-height: 36px;
   }

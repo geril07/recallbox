@@ -1,5 +1,5 @@
-import { createContext, useContext } from 'react'
-import type { Deck, Flashcard, Review } from './model'
+import { createContext, useContext } from "react"
+import type { Deck, Flashcard, Review } from "@/lib/model"
 export interface AppState {
   decks: Deck[]
   cards: Flashcard[]
@@ -7,12 +7,12 @@ export interface AppState {
   now: number
   editDeck: (deck?: Deck) => void
   editCard: (card?: Flashcard, deckId?: string) => void
-  theme: 'light' | 'dark'
+  theme: "light" | "dark"
   toggleTheme: () => void
 }
 export const AppContext = createContext<AppState | null>(null)
 export function useApp() {
   const context = useContext(AppContext)
-  if (!context) throw new Error('Recallbox context is missing')
+  if (!context) throw new Error("Recallbox context is missing")
   return context
 }

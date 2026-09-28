@@ -1,19 +1,19 @@
-import { Toast } from '@base-ui/react/toast'
-import { CheckCircle2, CircleAlert, X } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Button } from './button'
+import { Toast } from "@base-ui/react/toast"
+import { CheckCircle2, CircleAlert, X } from "lucide-react"
+import type { ReactNode } from "react"
+import { Button } from "@/components/ui/button"
 
 export const toastManager = Toast.createToastManager()
 export function notify(title: string) {
-  toastManager.add({ title, type: 'success' })
+  toastManager.add({ title, type: "success" })
 }
 export function reportError(error: unknown) {
   toastManager.add({
     title:
       error instanceof Error
         ? error.message
-        : 'Something went wrong. Please try again.',
-    type: 'error',
+        : "Something went wrong. Please try again.",
+    type: "error",
     timeout: 8000,
   })
 }
@@ -31,7 +31,7 @@ function ToastList() {
             toast={toast}
             className="flex items-start gap-3 rounded-xl border bg-popover p-4 text-popover-foreground shadow-lg transition duration-200 data-ending-style:translate-x-6 data-ending-style:opacity-0 data-starting-style:translate-y-6 data-starting-style:opacity-0 data-limited:hidden"
           >
-            {toast.type === 'error' ? (
+            {toast.type === "error" ? (
               <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
             ) : (
               <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />

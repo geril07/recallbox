@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState } from "react"
 import {
   ArrowLeftRight,
   Bold,
@@ -12,7 +12,7 @@ import {
   Loader2,
   Pencil,
   Plus,
-} from 'lucide-react'
+} from "lucide-react"
 import {
   colors,
   emptySchedule,
@@ -20,12 +20,12 @@ import {
   type Asset,
   type Deck,
   type Flashcard,
-} from '@/lib/model'
-import { saveCard, saveDeck } from '@/lib/db'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Textarea } from './ui/textarea'
-import { Label } from './ui/label'
+} from "@/lib/model"
+import { saveCard, saveDeck } from "@/lib/db"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -33,19 +33,19 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from './ui/dialog'
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from './ui/select'
-import { Switch } from './ui/switch'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs'
-import { DeckIcon, IconButton, deckIcons, Confirm } from './shared'
-import { Markdown } from './markdown'
-import { notify, reportError } from './ui/toast'
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { DeckIcon, IconButton, deckIcons, Confirm } from "@/components/shared"
+import { Markdown } from "@/components/markdown"
+import { notify, reportError } from "@/components/ui/toast"
 
 export function DeckEditor({
   deck,
@@ -54,19 +54,19 @@ export function DeckEditor({
   deck?: Deck
   onClose: () => void
 }) {
-  const [name, setName] = useState(deck?.name || '')
-  const [description, setDescription] = useState(deck?.description || '')
-  const [color, setColor] = useState<Deck['color']>(deck?.color || 'sage')
-  const [icon, setIcon] = useState<Deck['icon']>(deck?.icon || 'book')
-  const [tags, setTags] = useState(deck?.tags.join(', ') || '')
+  const [name, setName] = useState(deck?.name || "")
+  const [description, setDescription] = useState(deck?.description || "")
+  const [color, setColor] = useState<Deck["color"]>(deck?.color || "sage")
+  const [icon, setIcon] = useState<Deck["icon"]>(deck?.icon || "book")
+  const [tags, setTags] = useState(deck?.tags.join(", ") || "")
   const [busy, setBusy] = useState(false)
   const [discard, setDiscard] = useState(false)
   const dirty =
-    name !== (deck?.name || '') ||
-    description !== (deck?.description || '') ||
-    tags !== (deck?.tags.join(', ') || '') ||
-    color !== (deck?.color || 'sage') ||
-    icon !== (deck?.icon || 'book')
+    name !== (deck?.name || "") ||
+    description !== (deck?.description || "") ||
+    tags !== (deck?.tags.join(", ") || "") ||
+    color !== (deck?.color || "sage") ||
+    icon !== (deck?.icon || "book")
   function close() {
     if (dirty) setDiscard(true)
     else onClose()
@@ -85,7 +85,7 @@ export function DeckEditor({
         tags: parseTags(tags),
         createdAt: deck?.createdAt || Date.now(),
       })
-      notify(deck ? 'Deck updated' : 'Your new deck is ready')
+      notify(deck ? "Deck updated" : "Your new deck is ready")
       onClose()
     } catch (error) {
       reportError(error)
@@ -104,10 +104,10 @@ export function DeckEditor({
         <DialogContent className="editor-dialog sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {deck ? 'Edit deck' : 'A new place to learn'}
+              {deck ? "Edit deck" : "A new place to learn"}
             </DialogTitle>
             <DialogDescription>
-              {deck ? 'Make it your own.' : 'Give your next collection a home.'}
+              {deck ? "Make it your own." : "Give your next collection a home."}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-5">
@@ -133,8 +133,8 @@ export function DeckEditor({
                 <IconButton
                   key={key}
                   label={key}
-                  variant={icon === key ? 'secondary' : 'ghost'}
-                  onClick={() => setIcon(key as Deck['icon'])}
+                  variant={icon === key ? "secondary" : "ghost"}
+                  onClick={() => setIcon(key as Deck["icon"])}
                 >
                   <Icon />
                 </IconButton>
@@ -190,7 +190,7 @@ export function DeckEditor({
               </Button>
               <Button type="submit" disabled={busy || !name.trim()}>
                 {busy ? <Loader2 className="animate-spin" /> : <Plus />}
-                {deck ? 'Save changes' : 'Create deck'}
+                {deck ? "Save changes" : "Create deck"}
               </Button>
             </DialogFooter>
           </form>
@@ -221,38 +221,38 @@ export function CardEditor({
   onClose: () => void
 }) {
   const [selectedDeck, setSelectedDeck] = useState(
-    card?.deckId || deckId || decks[0]?.id || '',
+    card?.deckId || deckId || decks[0]?.id || "",
   )
-  const [prompt, setPrompt] = useState(card?.prompt || '')
-  const [answer, setAnswer] = useState(card?.answer || '')
+  const [prompt, setPrompt] = useState(card?.prompt || "")
+  const [answer, setAnswer] = useState(card?.answer || "")
   const [reverse, setReverse] = useState(card?.reverse || false)
-  const [reversePrompt, setReversePrompt] = useState(card?.reversePrompt || '')
-  const [tags, setTags] = useState(card?.tags.join(', ') || '')
+  const [reversePrompt, setReversePrompt] = useState(card?.reversePrompt || "")
+  const [tags, setTags] = useState(card?.tags.join(", ") || "")
   const [assets, setAssets] = useState<Asset[]>([])
   const [busy, setBusy] = useState(false)
   const [discard, setDiscard] = useState(false)
-  const [tab, setTab] = useState<string>('write')
+  const [tab, setTab] = useState<string>("write")
   const text = useRef<HTMLTextAreaElement>(null)
   const imageInput = useRef<HTMLInputElement>(null)
   const dirty =
-    prompt !== (card?.prompt || '') ||
-    answer !== (card?.answer || '') ||
+    prompt !== (card?.prompt || "") ||
+    answer !== (card?.answer || "") ||
     reverse !== (card?.reverse || false) ||
-    reversePrompt !== (card?.reversePrompt || '') ||
-    tags !== (card?.tags.join(', ') || '') ||
-    selectedDeck !== (card?.deckId || deckId || decks[0]?.id || '')
+    reversePrompt !== (card?.reversePrompt || "") ||
+    tags !== (card?.tags.join(", ") || "") ||
+    selectedDeck !== (card?.deckId || deckId || decks[0]?.id || "")
   function close() {
     if (dirty) setDiscard(true)
     else onClose()
   }
-  function insert(before: string, after = '', placeholder = '') {
+  function insert(before: string, after = "", placeholder = "") {
     const start = text.current?.selectionStart ?? answer.length
     const end = text.current?.selectionEnd ?? answer.length
     const selection = answer.slice(start, end) || placeholder
     setAnswer(
       answer.slice(0, start) + before + selection + after + answer.slice(end),
     )
-    setTab('write')
+    setTab("write")
     requestAnimationFrame(() => {
       text.current?.focus()
       text.current?.setSelectionRange(
@@ -263,20 +263,20 @@ export function CardEditor({
   }
   function addImage(file: File) {
     if (
-      !['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(
+      !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(
         file.type,
       )
     )
-      return reportError(new Error('Use a PNG, JPEG, WebP, or GIF image.'))
+      return reportError(new Error("Use a PNG, JPEG, WebP, or GIF image."))
     if (file.size > 10 * 1024 * 1024)
-      return reportError(new Error('Choose an image smaller than 10 MB.'))
+      return reportError(new Error("Choose an image smaller than 10 MB."))
     const asset: Asset = {
       id: crypto.randomUUID(),
       name: file.name,
       blob: file,
     }
     setAssets((old) => [...old, asset])
-    insert(`\n![${file.name.replace(/[[\]\\]/g, '')}](asset:${asset.id})\n`)
+    insert(`\n![${file.name.replace(/[[\]\\]/g, "")}](asset:${asset.id})\n`)
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -300,7 +300,7 @@ export function CardEditor({
         },
         assets,
       )
-      notify(card ? 'Card updated' : 'Card added to your deck')
+      notify(card ? "Card updated" : "Card added to your deck")
       onClose()
     } catch (error) {
       reportError(error)
@@ -319,7 +319,7 @@ export function CardEditor({
         <DialogContent className="editor-dialog sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {card ? 'Edit card' : 'One more thing to remember'}
+              {card ? "Edit card" : "One more thing to remember"}
             </DialogTitle>
             <DialogDescription>
               Keep the prompt simple. Make the answer yours.
@@ -380,25 +380,25 @@ export function CardEditor({
                   <div className="editor-toolbar">
                     <IconButton
                       label="Bold"
-                      onClick={() => insert('**', '**', 'bold text')}
+                      onClick={() => insert("**", "**", "bold text")}
                     >
                       <Bold />
                     </IconButton>
                     <IconButton
                       label="Italic"
-                      onClick={() => insert('*', '*', 'italic text')}
+                      onClick={() => insert("*", "*", "italic text")}
                     >
                       <Italic />
                     </IconButton>
                     <IconButton
                       label="List"
-                      onClick={() => insert('\n- ', '', 'item')}
+                      onClick={() => insert("\n- ", "", "item")}
                     >
                       <List />
                     </IconButton>
                     <IconButton
                       label="Code block"
-                      onClick={() => insert('\n```\n', '\n```\n', 'code')}
+                      onClick={() => insert("\n```\n", "\n```\n", "code")}
                     >
                       <Code />
                     </IconButton>
@@ -406,7 +406,7 @@ export function CardEditor({
                     <IconButton
                       label="Insert link"
                       onClick={() =>
-                        insert('[', '](https://example.com)', 'link text')
+                        insert("[", "](https://example.com)", "link text")
                       }
                     >
                       <Link2 />
@@ -431,7 +431,7 @@ export function CardEditor({
                     onChange={(e) => setAnswer(e.target.value)}
                     onPaste={(e) => {
                       const image = Array.from(e.clipboardData.files).find(
-                        (f) => f.type.startsWith('image/'),
+                        (f) => f.type.startsWith("image/"),
                       )
                       if (image) {
                         e.preventDefault()
@@ -444,7 +444,7 @@ export function CardEditor({
               <TabsContent value="preview">
                 <div className="min-h-48 rounded-lg border p-4">
                   <Markdown assets={assets}>
-                    {answer || '*Nothing to preview yet.*'}
+                    {answer || "*Nothing to preview yet.*"}
                   </Markdown>
                 </div>
               </TabsContent>
@@ -461,7 +461,7 @@ export function CardEditor({
               aria-label="Upload card image"
               onChange={(e) => {
                 if (e.target.files?.[0]) addImage(e.target.files[0])
-                e.target.value = ''
+                e.target.value = ""
               }}
             />
             <div className="reverse-panel">
@@ -525,7 +525,7 @@ export function CardEditor({
                 }
               >
                 {busy ? <Loader2 className="animate-spin" /> : <Check />}
-                {card ? 'Save changes' : 'Add card'}
+                {card ? "Save changes" : "Add card"}
               </Button>
             </DialogFooter>
           </form>
