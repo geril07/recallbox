@@ -91,15 +91,226 @@ test("creates a Markdown card, preserves its image, and reviews both directions 
   await expect(page.locator(".study-question")).not.toContainText(
     "friendly daytime",
   )
-  await page.getByRole("button", { name: "Reveal answer" }).click()
+  await expect(page.getByText("Reverse", { exact: true })).toBeVisible()
+  await page.getByRole("button", { name: "Show answer" }).click()
   await expect(page.locator(".study-answer")).toContainText("こんにちは")
   await page.getByRole("button", { name: /Easy/ }).click()
   await expect(
-    page.getByRole("heading", { name: "That’s time well spent." }),
+    page.getByRole("heading", { name: "Session complete" }),
   ).toBeVisible()
-  await page.goto(deckUrl)
+  await page.getByRole("button", { name: "Back to deck" }).click()
+  await expect(page).toHaveURL(deckUrl)
   await expect(page.getByText("You’re all caught up")).toBeVisible()
   expect(errors).toEqual([])
+})
+
+test("review keeps navigation and progress while isolating shortcuts from menus and help", async ({
+  page,
+}) => {
+  await page.goto("/study")
+  await expect(page.getByRole("button", { name: "Show answer" })).toBeVisible()
+  const progress = page.getByRole("progressbar", { name: "Session progress" })
+  await expect(progress).toHaveAttribute("aria-valuenow", "0")
+  expect(
+    await progress.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeGreaterThan(100)
+  await expect(page.getByText("FOCUS MODE", { exact: true })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "End session" })).toHaveCount(0)
+
+  await page.getByRole("button", { name: "Color theme", exact: true }).click()
+  await page.keyboard.press("Space")
+  await expect(page.locator(".study-answer")).toHaveCount(0)
+  await page.keyboard.press("Escape")
+  await page.getByRole("button", { name: "Review help", exact: true }).click()
+  const help = page.getByRole("dialog", { name: "Review help", exact: true })
+  await expect(help).toContainText("Each direction appears once per session")
+  await help.focus()
+  await page.keyboard.press("Space")
+  await expect(page.locator(".study-answer")).toHaveCount(0)
+  await help.getByRole("button", { name: "Close", exact: true }).click()
+  await page.getByRole("button", { name: "Show answer" }).click()
+  await expect(page.locator(".study-actions").getByRole("button")).toHaveCount(
+    4,
+  )
+
+  await page.getByRole("button", { name: "Review help", exact: true }).click()
+  await expect(
+    help.getByRole("heading", { name: "Estimated next review" }),
+  ).toBeVisible()
+  await page.keyboard.press("3")
+  await expect(page.locator(".study-progress")).toContainText(
+    "0 of 18 reviewed",
+  )
+  await help.getByRole("button", { name: "Close", exact: true }).click()
+  await expect(help).toHaveCount(0)
+  await page.keyboard.press("3")
+  await expect(
+    page.getByText("1 of 18 reviewed", { exact: true }),
+  ).toBeVisible()
+  await expect(progress).toHaveAttribute("aria-valuenow", /5\.5/)
+
+  const navigation = page.getByRole("button", { name: "Open navigation" })
+  if (await navigation.isVisible()) await navigation.click()
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Overview", exact: true })
+    .click()
+  await expect(
+    page.getByText("1 reviewed today", { exact: true }),
+  ).toBeVisible()
+})
+
+test("long review answers scroll without hiding controls or the end of the answer", async ({
+  page,
+}, testInfo) => {
+  await newDeck(page)
+  const deckUrl = page.url()
+  for (const [prompt, answer] of [
+    [
+      "Long answer",
+      [
+        "First answer line.",
+        ...Array.from(
+          { length: 45 },
+          (_, i) =>
+            `Paragraph ${i + 1}. A longer explanation to read before rating this card.`,
+        ),
+        "Final answer line.",
+      ].join("\n\n"),
+    ],
+    ["Next prompt", "Short answer"],
+  ]) {
+    await page
+      .getByRole("button", { name: "Add card", exact: true })
+      .first()
+      .click()
+    await page.getByLabel("Prompt", { exact: true }).fill(prompt)
+    await page.getByLabel("Answer", { exact: true }).fill(answer)
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Add card", exact: true })
+      .click()
+    await expect(
+      page.getByRole("dialog", { name: "One more thing to remember" }),
+    ).toHaveCount(0)
+  }
+  await page.getByRole("button", { name: "Review deck" }).click()
+  await page.getByRole("button", { name: "Show answer" }).click()
+  const body = page.getByRole("region", { name: "Review card" })
+  const actions = page.locator(".study-actions")
+  await expect(
+    page.getByRole("heading", { name: "Answer", exact: true }),
+  ).toBeInViewport()
+  for (const label of ["Again", "Hard", "Good", "Easy"]) {
+    await expect(
+      actions.getByRole("button", { name: new RegExp(`^${label}`) }),
+    ).toBeInViewport({ ratio: 1 })
+  }
+  await body.evaluate((element) =>
+    element.scrollTo({ top: element.scrollHeight }),
+  )
+  await expect(
+    page.getByText("Final answer line.", { exact: true }),
+  ).toBeInViewport({ ratio: 1 })
+  expect(
+    await page
+      .getByText("Final answer line.", { exact: true })
+      .evaluate((element) => element.getBoundingClientRect().bottom),
+  ).toBeLessThanOrEqual(
+    await actions.evaluate((element) => element.getBoundingClientRect().top),
+  )
+  await expect(
+    page.getByRole("button", { name: "Color theme", exact: true }),
+  ).toBeInViewport()
+  for (const colorScheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme })
+    if (colorScheme === "dark")
+      await expect(page.locator("html")).toHaveClass("dark")
+    else await expect(page.locator("html")).not.toHaveClass("dark")
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            document
+              .getAnimations()
+              .filter(
+                (animation) =>
+                  animation.playState === "running" &&
+                  animation.effect?.getTiming().iterations !== Infinity,
+              ).length,
+        ),
+      )
+      .toBe(0)
+    const accessibility = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa"])
+      .analyze()
+    expect(
+      accessibility.violations
+        .filter(
+          (violation) =>
+            violation.impact === "serious" || violation.impact === "critical",
+        )
+        .map((violation) => ({
+          id: violation.id,
+          nodes: violation.nodes.map((node) => node.target),
+        })),
+    ).toEqual([])
+    await page.screenshot({
+      path: testInfo.outputPath(`long-answer-${colorScheme}.png`),
+      scale: "css",
+    })
+  }
+  await actions.getByRole("button", { name: /^Again/ }).click()
+  await expect(page.getByText("1 of 2 reviewed", { exact: true })).toBeVisible()
+  await expect(page.locator(".study-question")).toContainText("Next prompt")
+  await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBe(0)
+  await page.getByRole("button", { name: "Show answer" }).click()
+  await actions.getByRole("button", { name: /^Easy/ }).click()
+  await expect(
+    page.getByRole("heading", { name: "Session complete" }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("2 reviews completed. Progress saved in this browser.", {
+      exact: true,
+    }),
+  ).toBeVisible()
+  await page.getByRole("button", { name: "Back to deck" }).click()
+  await expect(page).toHaveURL(deckUrl)
+})
+
+test("review save errors retain the answer and offer a working reload", async ({
+  page,
+  context,
+}) => {
+  await newDeck(page)
+  await newCard(page)
+  const deckUrl = page.url()
+  await page.getByRole("button", { name: "Review deck" }).click()
+  await page.getByRole("button", { name: "Show answer" }).click()
+  const editor = await context.newPage()
+  await editor.goto(deckUrl)
+  await editor
+    .getByRole("button", { name: "Edit こんにちは", exact: true })
+    .click()
+  await editor.getByLabel("Answer", { exact: true }).fill("Updated answer")
+  await editor
+    .getByRole("button", { name: "Save changes", exact: true })
+    .click()
+  await expect(
+    editor.getByRole("dialog", { name: "Edit card", exact: true }),
+  ).toHaveCount(0)
+  await editor.close()
+  await page.getByRole("button", { name: /^Good/ }).click()
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "Your last answer was not counted",
+  )
+  await expect(page.getByText("0 of 2 reviewed", { exact: true })).toBeVisible()
+  await expect(page.locator(".study-answer")).toContainText("Hello")
+  await page.getByRole("button", { name: "Reload session" }).click()
+  await page.getByRole("button", { name: "Show answer" }).click()
+  await expect(page.locator(".study-answer")).toContainText("Updated answer")
+  await page.getByRole("button", { name: /^Good/ }).click()
+  await expect(page.getByText("1 of 2 reviewed", { exact: true })).toBeVisible()
 })
 
 test("ZIP restore recovers a deleted deck and its local image", async ({
@@ -570,6 +781,38 @@ test("mobile sheet slides and fades without a backdrop flash, and respects reduc
   await expect(drawer).toHaveCount(0)
 })
 
+test("shows the brand mark in navigation and serves the favicon and app icons", async ({
+  page,
+}) => {
+  await page.goto("/")
+  await expect(
+    page.getByRole("heading", { name: "Overview", exact: true }),
+  ).toBeVisible()
+  const navigationButton = page.getByRole("button", { name: "Open navigation" })
+  if (await navigationButton.isVisible()) await navigationButton.click()
+  const home = page.getByRole("link", { name: "Recallbox home" })
+  await expect(home).toBeInViewport()
+  await expect(home.locator(".brand-mark")).toHaveCSS(
+    "mask-image",
+    /brand-mark\.svg/,
+  )
+  for (const path of [
+    "/brand-mark.svg",
+    "/icon.svg",
+    "/icon-192.png",
+    "/icon-512.png",
+    "/icon-maskable-512.png",
+  ]) {
+    const response = await page.request.get(path)
+    expect(response.ok()).toBeTruthy()
+    expect(response.headers()["content-type"]).toMatch(/image\/(svg\+xml|png)/)
+  }
+  await home.click()
+  await expect(
+    page.getByRole("heading", { name: "Overview", exact: true }),
+  ).toBeVisible()
+})
+
 test("renders every screen without overflow or serious accessibility violations", async ({
   page,
 }, testInfo) => {
@@ -577,55 +820,59 @@ test("renders every screen without overflow or serious accessibility violations"
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text())
   })
-  for (const path of [
-    "/",
-    "/decks",
-    "/tags",
-    "/activity",
-    "/settings",
-    "/study",
-  ]) {
-    await page.goto(path)
-    await expect(page.getByRole("main")).toBeVisible()
-    await expect
-      .poll(() => page.locator("h1, .study-card").count())
-      .toBeGreaterThan(0)
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
-      ),
-    ).toBeTruthy()
-    await page.evaluate(async () => {
-      await document.fonts.ready
-      await navigator.serviceWorker.ready
-    })
-    await expect(page.getByRole("main").locator(":scope > div")).toHaveCSS(
-      "opacity",
-      "1",
-    )
-    await expect
-      .poll(() =>
-        page.evaluate(
-          () =>
-            document
-              .getAnimations()
-              .filter(
-                (a) =>
-                  a.playState === "running" &&
-                  a.effect?.getTiming().iterations !== Infinity,
-              ).length,
+  for (const colorScheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme })
+    for (const path of [
+      "/",
+      "/decks",
+      "/tags",
+      "/activity",
+      "/settings",
+      "/study",
+    ]) {
+      await page.goto(path)
+      await expect(page.getByRole("main")).toBeVisible()
+      await expect
+        .poll(() => page.locator("h1, .study-card").count())
+        .toBeGreaterThan(0)
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
         ),
+      ).toBeTruthy()
+      await page.evaluate(async () => {
+        await document.fonts.ready
+        await navigator.serviceWorker.ready
+      })
+      await expect(page.getByRole("main").locator(":scope > div")).toHaveCSS(
+        "opacity",
+        "1",
       )
-      .toBe(0)
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa"])
-      .analyze()
-    expect(
-      results.violations
-        .filter((v) => v.impact === "critical" || v.impact === "serious")
-        .map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })),
-    ).toEqual([])
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              document
+                .getAnimations()
+                .filter(
+                  (a) =>
+                    a.playState === "running" &&
+                    a.effect?.getTiming().iterations !== Infinity,
+                ).length,
+          ),
+        )
+        .toBe(0)
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa"])
+        .analyze()
+      expect(
+        results.violations
+          .filter((v) => v.impact === "critical" || v.impact === "serious")
+          .map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })),
+      ).toEqual([])
+    }
   }
+  await page.emulateMedia({ colorScheme: "light" })
   await page.goto("/")
   await expect(page.getByRole("main").locator(":scope > div")).toHaveCSS(
     "opacity",
@@ -666,6 +913,10 @@ test("theme controls share a persisted preference and follow system changes", as
   await page.emulateMedia({ colorScheme: "dark" })
   await page.goto("/")
   await expect(page.locator("html")).toHaveClass("dark")
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
+    "content",
+    "#171717",
+  )
   await page.getByRole("button", { name: "Color theme", exact: true }).click()
   await expect(
     page.getByRole("menuitemradio", { name: "System", exact: true }),
@@ -673,6 +924,10 @@ test("theme controls share a persisted preference and follow system changes", as
   await page.keyboard.press("Escape")
   await page.emulateMedia({ colorScheme: "light" })
   await expect(page.locator("html")).not.toHaveClass("dark")
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
+    "content",
+    "#fafafa",
+  )
 
   await page.getByRole("button", { name: "Color theme", exact: true }).click()
   await page.getByRole("menuitemradio", { name: "Dark", exact: true }).click()
@@ -725,11 +980,11 @@ test("overview reflects completed reviews and a cleared queue", async ({
     await expect(
       page.getByText(`${i} of 4 reviewed`, { exact: true }),
     ).toBeVisible()
-    await page.getByRole("button", { name: "Reveal answer" }).click()
+    await page.getByRole("button", { name: "Show answer" }).click()
     await page.getByRole("button", { name: /Easy/ }).click()
   }
   await expect(
-    page.getByRole("heading", { name: "That’s time well spent." }),
+    page.getByRole("heading", { name: "Session complete" }),
   ).toBeVisible()
   await page.goto("/")
   await expect(
@@ -748,11 +1003,11 @@ test("overview reflects completed reviews and a cleared queue", async ({
     await expect(
       page.getByText(`${i} of 14 reviewed`, { exact: true }),
     ).toBeVisible()
-    await page.getByRole("button", { name: "Reveal answer" }).click()
+    await page.getByRole("button", { name: "Show answer" }).click()
     await page.getByRole("button", { name: /Easy/ }).click()
   }
   await expect(
-    page.getByRole("heading", { name: "That’s time well spent." }),
+    page.getByRole("heading", { name: "Session complete" }),
   ).toBeVisible()
   await page.goto("/")
   await expect(
@@ -824,7 +1079,7 @@ test("loads and reviews offline after the first successful visit", async ({
     page.getByRole("heading", { name: "Overview", exact: true }),
   ).toBeVisible()
   await page.getByRole("button", { name: /Start reviewing/ }).click()
-  await page.getByRole("button", { name: "Reveal answer" }).click()
+  await page.getByRole("button", { name: "Show answer" }).click()
   await page.getByRole("button", { name: /Easy/ }).click()
   await expect(page.getByText("1 of 18 reviewed")).toBeVisible()
   await context.setOffline(false)

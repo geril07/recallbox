@@ -34,9 +34,10 @@ If Chromium is not installed for Playwright, run `npx playwright install chromiu
 - Paste images from the clipboard or upload PNG/JPEG/WebP/GIF files, up to 10 MB each. Uploaded images live in IndexedDB, not a remote service.
 - Optional reverse practice. The full answer becomes the reverse prompt unless a shorter override is provided. The original prompt is the reverse answer.
 - FSRS v6, via `ts-fsrs`, with 90% target retention. Forward and reverse schedules are independent. Disabling reverse practice preserves its schedule.
-- Due-only review sessions. Space reveals the answer; 1–4 grade it. Each direction appears once in a session; short learning steps return when due in a later session. Progress saves after every answer.
+- Due-only review sessions. Space shows the answer; 1–4 grade it. Each direction appears once in a session; short learning steps return when due in a later session. Progress saves after every answer.
+- Review keeps the sidebar and app header, with compact deck/progress context and content-only cards. Long cards scroll without covering the review controls; controls stay at the bottom on mobile. Review help explains ratings and shows optional interval estimates. Keyboard shortcuts do not act through menus or dialogs. Completion returns to the reviewed deck or Overview, without a running timer or recall score.
 - Real activity, recall rate, and calendar-day streaks. “Learned” means the FSRS Review state, not permanent mastery.
-- System/light/dark themes with a shared preference in the header and settings. System follows device appearance changes. Responsive layouts, keyboard controls, tooltips, and reduced-motion support.
+- Neutral System/light/dark themes with a shared preference in the header and settings. System follows device appearance changes, including the browser theme color. Deck colors and review-grade colors remain distinct. Responsive layouts, keyboard controls, tooltips, and reduced-motion support.
 - A compact overview with due reviews, decks ordered by their oldest due review, and activity for the last seven calendar days. When nothing is due, it shows recently created decks.
 - Installable PWA. The production app works offline after its first successful load. Updates prompt before reloading, so an open editor is not silently lost.
 - Versioned ZIP backups containing `recallbox.json` and `assets/<id>`. Imports validate schemas, unique IDs, references, and bounded decompressed sizes before an atomic replacement. Restore is not a merge.
@@ -73,6 +74,12 @@ Your library belongs to this **browser profile and origin**. A different browser
 - ZIP import is limited to 100 MB compressed and expanded content. Large libraries and review histories have not been load-tested; the current dashboard reads the local library into memory.
 - There is no conflict-resolving sync. Restoring a backup replaces the complete local library, after confirmation.
 - JSZip 3.10.2 omits its documented `ZipObject.internalStream` API from its published TypeScript declarations. `src/types/jszip.d.ts` supplies that declaration; no runtime behavior is patched. The stream lets imports stop when the declared size limit is exceeded.
+
+## Brand assets
+
+The approved letter-study sheet is preserved in [`docs/brand/letter-studies.png`](docs/brand/letter-studies.png). The lowercase **r** is traced from that reference, not replaced by a font glyph.
+
+`public/brand-mark.svg` is the shared source for the sidebar mark and generated app icons. Run `npm run icons` after editing it to regenerate `public/icon.svg`, the 192/512-pixel PNG icons, and the opaque maskable icon. See [`docs/brand/README.md`](docs/brand/README.md) for the design decision and asset details.
 
 ## Stack and structure
 

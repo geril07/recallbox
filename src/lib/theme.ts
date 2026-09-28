@@ -24,6 +24,12 @@ export function useTheme() {
       const dark = theme === "dark" || (theme === "system" && system.matches)
       document.documentElement.classList.toggle("dark", dark)
       document.documentElement.style.colorScheme = dark ? "dark" : "light"
+      const background = getComputedStyle(document.documentElement)
+        .getPropertyValue("--background")
+        .trim()
+      document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute("content", background)
     }
     apply()
     if (theme === "system") system.addEventListener("change", apply)

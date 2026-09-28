@@ -48,7 +48,12 @@ const navigation = [
   { to: "/activity", label: "Activity", icon: BarChart3 },
 ] as const
 export function Logo() {
-  return <span className="brand">recallbox</span>
+  return (
+    <span className="brand">
+      <span className="brand-mark" aria-hidden="true" />
+      recallbox
+    </span>
+  )
 }
 function Navigation({
   decks,
@@ -182,7 +187,7 @@ export function Layout() {
         <aside className="sidebar" aria-label="Main sidebar">
           <Navigation {...navProps} />
         </aside>
-        <div className="app-main">
+        <div className={cn("app-main", path === "/study" && "study-layout")}>
           <header className="topbar">
             <div className="flex min-w-0 items-center gap-3">
               <IconButton
