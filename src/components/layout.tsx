@@ -32,6 +32,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
 import { IconButton, Loading } from "@/components/shared"
 import { cn } from "@/lib/utils"
 
@@ -232,12 +238,16 @@ export function Layout() {
           </main>
         </div>
       </div>
-      <Dialog open={mobile} onOpenChange={setMobile}>
-        <DialogContent className="mobile-nav-dialog" showCloseButton={false}>
-          <DialogTitle className="sr-only">Navigation</DialogTitle>
-          <DialogDescription className="sr-only">
+      <Sheet open={mobile} onOpenChange={setMobile}>
+        <SheetContent
+          side="left"
+          className="mobile-nav-dialog"
+          showCloseButton={false}
+        >
+          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <SheetDescription className="sr-only">
             Main navigation and deck shortcuts
-          </DialogDescription>
+          </SheetDescription>
           <IconButton
             className="absolute right-3 top-4"
             label="Close navigation"
@@ -246,8 +256,8 @@ export function Layout() {
             <X />
           </IconButton>
           <Navigation {...navProps} />
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
       {deckEditor && (
         <DeckEditor
           deck={deckEditor.deck}

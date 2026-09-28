@@ -470,6 +470,106 @@ test("keeps unsaved edits until discard is confirmed", async ({ page }) => {
   ).toHaveCount(0)
 })
 
+test("mobile sheet slides and fades without a backdrop flash, and respects reduced motion", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 412, height: 915 })
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await page.goto("/")
+  await expect(
+    page.getByRole("heading", { name: "Overview", exact: true }),
+  ).toBeVisible()
+  await page.evaluate(() => {
+    document.addEventListener("transitionrun", (event) => {
+      if (
+        !(event.target instanceof HTMLElement) ||
+        !event.target.matches(".mobile-nav-dialog") ||
+        event.propertyName !== "translate" ||
+        matchMedia("(prefers-reduced-motion: reduce)").matches
+      )
+        return
+      // Pause at the midpoint so the assertions do not depend on machine speed.
+      for (const animation of event.target.getAnimations()) {
+        if (
+          animation instanceof CSSTransition &&
+          animation.transitionProperty === "translate"
+        ) {
+          animation.pause()
+          animation.currentTime =
+            Number(animation.effect?.getTiming().duration) / 2
+        }
+      }
+    })
+  })
+  const drawer = page.locator(".mobile-nav-dialog")
+  const backdrop = page.locator('[data-slot="sheet-overlay"]')
+  const open = page.getByRole("button", { name: "Open navigation" })
+  await open.click()
+  await expect
+    .poll(() =>
+      drawer.evaluate((element) =>
+        element
+          .getAnimations()
+          .some((animation) => animation.playState === "paused"),
+      ),
+    )
+    .toBe(true)
+  const entering = await drawer.evaluate((element) =>
+    element.getBoundingClientRect().toJSON(),
+  )
+  expect(entering.x).toBeLessThan(0)
+  expect(entering.right).toBeGreaterThan(0)
+  expect(entering.y).toBe(0)
+  await drawer.evaluate((element) =>
+    element.getAnimations().forEach((animation) => animation.play()),
+  )
+  await expect
+    .poll(() => drawer.evaluate((element) => element.getBoundingClientRect().x))
+    .toBe(0)
+
+  await page.getByRole("button", { name: "Close navigation" }).click()
+  await expect
+    .poll(() =>
+      drawer.evaluate((element) =>
+        element
+          .getAnimations()
+          .some((animation) => animation.playState === "paused"),
+      ),
+    )
+    .toBe(true)
+  const exiting = await drawer.evaluate((element) =>
+    element.getBoundingClientRect().toJSON(),
+  )
+  expect(exiting.x).toBeLessThan(0)
+  expect(exiting.right).toBeGreaterThan(0)
+  await expect
+    .poll(() =>
+      backdrop.evaluate((element) => getComputedStyle(element).opacity),
+    )
+    .toBe("0")
+  await page.waitForTimeout(100)
+  expect(
+    await backdrop.evaluate((element) => getComputedStyle(element).opacity),
+  ).toBe("0")
+  await drawer.evaluate((element) =>
+    element.getAnimations().forEach((animation) => animation.play()),
+  )
+  await expect(drawer).toHaveCount(0)
+
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await open.click()
+  await expect(
+    page.getByRole("link", { name: "Recallbox home" }),
+  ).toBeInViewport()
+  const duration = await drawer.evaluate(
+    (element) =>
+      Number.parseFloat(getComputedStyle(element).transitionDuration) * 1000,
+  )
+  expect(duration).toBeLessThanOrEqual(1)
+  await page.getByRole("button", { name: "Close navigation" }).click()
+  await expect(drawer).toHaveCount(0)
+})
+
 test("renders every screen without overflow or serious accessibility violations", async ({
   page,
 }, testInfo) => {

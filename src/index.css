@@ -1686,7 +1686,6 @@
 }
 .mobile-nav-dialog {
   inset: 0 auto 0 0;
-  transform: none;
   width: 280px;
   max-width: 90vw;
   max-height: 100svh;
