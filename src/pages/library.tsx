@@ -35,7 +35,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -185,6 +184,27 @@ export function Decks() {
     </div>
   )
 }
+function PreviewContent({
+  prompt,
+  answer,
+}: {
+  prompt: string
+  answer: string
+}) {
+  return (
+    <div>
+      <div className="preview-question">
+        <span className="eyebrow">PROMPT</span>
+        <Markdown>{prompt}</Markdown>
+      </div>
+      <div className="preview-answer">
+        <span className="eyebrow">ANSWER</span>
+        <Markdown>{answer}</Markdown>
+      </div>
+    </div>
+  )
+}
+
 function CardPreview({
   card,
   onClose,
@@ -203,41 +223,29 @@ function CardPreview({
       <DialogContent className="editor-dialog sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Card preview</DialogTitle>
-          <DialogDescription>
-            {card.reverse
-              ? "Two directions. Two independent memories."
-              : "A little piece of your knowledge."}
-          </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="forward">
-          <TabsList>
-            <TabsTrigger value="forward">Forward</TabsTrigger>
-            {card.reverse && (
+        {card.reverse ? (
+          <Tabs defaultValue="forward">
+            <TabsList aria-label="Preview direction">
+              <TabsTrigger value="forward">Forward</TabsTrigger>
               <TabsTrigger value="backward">
                 <ArrowLeftRight />
                 Reverse
               </TabsTrigger>
-            )}
-          </TabsList>
-          {(["forward", "backward"] as const).map((direction) => (
-            <TabsContent key={direction} value={direction}>
-              <div className="preview-question">
-                <span className="eyebrow">PROMPT</span>
-                <Markdown>
-                  {direction === "forward"
-                    ? card.prompt
-                    : card.reversePrompt || card.answer}
-                </Markdown>
-              </div>
-              <div className="preview-answer">
-                <span className="eyebrow">ANSWER</span>
-                <Markdown>
-                  {direction === "forward" ? card.answer : card.prompt}
-                </Markdown>
-              </div>
+            </TabsList>
+            <TabsContent value="forward">
+              <PreviewContent prompt={card.prompt} answer={card.answer} />
             </TabsContent>
-          ))}
-        </Tabs>
+            <TabsContent value="backward">
+              <PreviewContent
+                prompt={card.reversePrompt || card.answer}
+                answer={card.prompt}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <PreviewContent prompt={card.prompt} answer={card.answer} />
+        )}
         <div className="flex justify-end">
           <Button
             variant="outline"

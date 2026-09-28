@@ -498,13 +498,11 @@
   padding: 20px 20px 0;
   gap: 0;
   position: relative;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
+  transition: background-color 0.2s;
 }
-.deck-tile:hover {
-  box-shadow: 0 5px 20px #00000008;
-  transform: translateY(-2px);
+.deck-tile:hover,
+.deck-tile:has([data-slot="dropdown-menu-trigger"][aria-expanded="true"]) {
+  background-color: var(--muted);
 }
 .deck-tile-top {
   display: flex;

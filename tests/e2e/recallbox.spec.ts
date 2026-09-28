@@ -79,6 +79,21 @@ test("creates a Markdown card, preserves its image, and reviews both directions 
         .evaluate((img: HTMLImageElement) => img.naturalWidth),
     )
     .toBe(192)
+  await page.getByRole("tab", { name: "Reverse", exact: true }).click()
+  await expect(
+    page
+      .getByRole("tabpanel", { name: "Reverse" })
+      .locator(".preview-question"),
+  ).toContainText("Hello")
+  await expect(
+    page.getByRole("tabpanel", { name: "Reverse" }).locator(".preview-answer"),
+  ).toContainText("こんにちは")
+  await page.getByRole("tab", { name: "Forward", exact: true }).click()
+  await expect(
+    page
+      .getByRole("tabpanel", { name: "Forward" })
+      .locator(".preview-question"),
+  ).toContainText("こんにちは")
   await page.getByRole("button", { name: "Close", exact: true }).click()
   await page.getByRole("button", { name: "Review deck" }).click()
   await expect(page.getByText("0 of 2 reviewed")).toBeVisible()
@@ -102,6 +117,61 @@ test("creates a Markdown card, preserves its image, and reviews both directions 
   await expect(page).toHaveURL(deckUrl)
   await expect(page.getByText("You’re all caught up")).toBeVisible()
   expect(errors).toEqual([])
+})
+
+test("forward-only preview has no direction switch or filler", async ({
+  page,
+}) => {
+  await newDeck(page)
+  await page
+    .getByRole("button", { name: "Add card", exact: true })
+    .first()
+    .click()
+  await page.getByLabel("Prompt", { exact: true }).fill("Why is the sky blue?")
+  await page.getByLabel("Answer", { exact: true }).fill("Rayleigh scattering")
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Add card", exact: true })
+    .click()
+  await page.getByRole("button", { name: /^Why is the sky blue/ }).click()
+  const preview = page.getByRole("dialog", { name: "Card preview" })
+  await expect(preview).toBeVisible()
+  await expect(preview.getByRole("tablist")).toHaveCount(0)
+  await expect(preview).not.toContainText("A little piece of your knowledge.")
+  await expect(preview.locator(".preview-question")).toContainText(
+    "Why is the sky blue?",
+  )
+  await expect(preview.locator(".preview-answer")).toContainText(
+    "Rayleigh scattering",
+  )
+})
+
+test("deck stays still and highlighted when the pointer enters its menu", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "Hover requires a mouse")
+  await newDeck(page)
+  await page.goto("/decks")
+  const tile = page.locator(".deck-tile").filter({ hasText: "Trip Japanese" })
+  await page.mouse.move(0, 0)
+  const initial = await tile.boundingBox()
+  const initialBackground = await tile.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  )
+  await tile.hover()
+  await expect(tile).toHaveCSS("transform", "none")
+  const trigger = tile.getByRole("button", {
+    name: "Options for Trip Japanese",
+  })
+  await trigger.click()
+  await page.getByRole("menuitem", { name: "Edit deck", exact: true }).hover()
+  await expect(trigger).toHaveAttribute("aria-expanded", "true")
+  await expect(tile).not.toHaveCSS("background-color", initialBackground)
+  await page.keyboard.press("Escape")
+  await page.mouse.move(0, 0)
+  await expect(tile).toHaveCSS("background-color", initialBackground)
+  expect(await tile.boundingBox()).toEqual(initial)
 })
 
 test("review keeps navigation and progress while isolating shortcuts from menus and help", async ({
