@@ -78,4 +78,6 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   )
 }
 
+// Keep the shadcn variant API; editing it may cause a full dev reload.
+// oxlint-disable-next-line react/only-export-components
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }

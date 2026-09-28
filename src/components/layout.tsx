@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Link, Outlet, useRouterState } from "@tanstack/react-router"
 import {
   ArrowUpRight,
@@ -195,7 +195,20 @@ export function Layout() {
       window.removeEventListener("offline", update)
     }
   }, [])
-  if (!library) return <Loading />
+  const appValue = useMemo(
+    () =>
+      library && {
+        ...library,
+        now,
+        editDeck: (deck?: Deck) => setDeckEditor({ deck }),
+        editCard: (card?: Flashcard, deckId?: string) =>
+          setCardEditor({ card, deckId }),
+        theme,
+        toggleTheme: () => setTheme((t) => (t === "light" ? "dark" : "light")),
+      },
+    [library, now, theme],
+  )
+  if (!library || !appValue) return <Loading />
   const title = path.startsWith("/decks/")
     ? "My decks"
     : path === "/study"
@@ -211,16 +224,7 @@ export function Layout() {
     onClose: () => setMobile(false),
   }
   return (
-    <AppContext.Provider
-      value={{
-        ...library,
-        now,
-        editDeck: (deck) => setDeckEditor({ deck }),
-        editCard: (card, deckId) => setCardEditor({ card, deckId }),
-        theme,
-        toggleTheme: () => setTheme((t) => (t === "light" ? "dark" : "light")),
-      }}
-    >
+    <AppContext.Provider value={appValue}>
       <div className="app-shell">
         <aside className="sidebar" aria-label="Workspace sidebar">
           <Navigation {...navProps} />

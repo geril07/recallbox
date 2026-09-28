@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react"
-import ReactMarkdown, { defaultUrlTransform } from "react-markdown"
+import { useEffect, useMemo, useState } from "react"
+import ReactMarkdown, {
+  defaultUrlTransform,
+  type Components,
+} from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize"
 import { useLiveQuery } from "dexie-react-hooks"
@@ -10,6 +13,7 @@ const schema = {
   ...defaultSchema,
   protocols: { ...defaultSchema.protocols, src: ["https", "http", "asset"] },
 }
+const emptyAssets: Asset[] = []
 function LocalImage({
   id,
   alt,
@@ -38,13 +42,34 @@ function LocalImage({
     </span>
   )
 }
+function createComponents(assets: Asset[]): Components {
+  return {
+    a: ({ href, children }) => (
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    ),
+    img: ({ src, alt }) =>
+      typeof src === "string" && src.startsWith("asset:") ? (
+        <LocalImage id={src.slice(6)} alt={alt} pending={assets} />
+      ) : (
+        <img
+          src={src}
+          alt={alt || "Card image"}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      ),
+  }
+}
 export function Markdown({
   children,
-  assets = [],
+  assets = emptyAssets,
 }: {
   children: string
   assets?: Asset[]
 }) {
+  const components = useMemo(() => createComponents(assets), [assets])
   return (
     <div className="markdown">
       <ReactMarkdown
@@ -55,24 +80,7 @@ export function Markdown({
             ? url
             : defaultUrlTransform(url)
         }
-        components={{
-          a: ({ href, children: linkText }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-              {linkText}
-            </a>
-          ),
-          img: ({ src, alt }) =>
-            typeof src === "string" && src.startsWith("asset:") ? (
-              <LocalImage id={src.slice(6)} alt={alt} pending={assets} />
-            ) : (
-              <img
-                src={src}
-                alt={alt || "Card image"}
-                loading="lazy"
-                referrerPolicy="no-referrer"
-              />
-            ),
-        }}
+        components={components}
       >
         {children}
       </ReactMarkdown>

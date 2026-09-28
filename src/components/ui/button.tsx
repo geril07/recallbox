@@ -55,4 +55,6 @@ function Button({
   )
 }
 
+// Keep the shadcn variant API; editing it may cause a full dev reload.
+// oxlint-disable-next-line react/only-export-components
 export { Button, buttonVariants }

@@ -3,10 +3,16 @@ import { CheckCircle2, CircleAlert, X } from "lucide-react"
 import type { ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 
+// Toast state and its actions intentionally share this UI module.
+// oxlint-disable-next-line react/only-export-components
 export const toastManager = Toast.createToastManager()
+
+// oxlint-disable-next-line react/only-export-components
 export function notify(title: string) {
   toastManager.add({ title, type: "success" })
 }
+
+// oxlint-disable-next-line react/only-export-components
 export function reportError(error: unknown) {
   toastManager.add({
     title:
@@ -17,6 +23,7 @@ export function reportError(error: unknown) {
     timeout: 8000,
   })
 }
+
 function ToastList() {
   const { toasts } = Toast.useToastManager()
   return (

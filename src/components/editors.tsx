@@ -43,7 +43,8 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { DeckIcon, IconButton, deckIcons, Confirm } from "@/components/shared"
+import { DeckIcon, IconButton, Confirm } from "@/components/shared"
+import { deckIcons } from "@/components/deck-icons"
 import { Markdown } from "@/components/markdown"
 import { notify, reportError } from "@/components/ui/toast"
 

@@ -1,13 +1,5 @@
-import {
-  BookOpen,
-  Code2,
-  Globe2,
-  Languages,
-  Leaf,
-  Sparkles,
-  Inbox,
-  Loader2,
-} from "lucide-react"
+import { Inbox, Loader2 } from "lucide-react"
+import { deckIcons } from "@/components/deck-icons"
 import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -26,14 +18,6 @@ import {
   AlertDialogFooter,
 } from "@/components/ui/alert-dialog"
 
-export const deckIcons = {
-  languages: Languages,
-  sparkles: Sparkles,
-  code: Code2,
-  book: BookOpen,
-  globe: Globe2,
-  leaf: Leaf,
-}
 export function DeckIcon({
   deck,
   small = false,
