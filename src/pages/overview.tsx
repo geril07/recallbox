@@ -1,27 +1,12 @@
-import { useState } from "react"
 import { Link } from "@tanstack/react-router"
-import { motion } from "motion/react"
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  CheckCheck,
-  Clock3,
-  Flame,
-  Layers,
-  Plus,
-  Sparkles,
-  Target,
-  X,
-} from "lucide-react"
+import { ArrowRight, Plus, X } from "lucide-react"
 import { useLiveQuery } from "dexie-react-hooks"
 import { useApp } from "@/lib/app-context"
 import { db, setSetting } from "@/lib/db"
-import { dateKey, queueFor, streakFor } from "@/lib/model"
+import { dateKey, queueFor } from "@/lib/model"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { DeckTile } from "@/components/deck-tile"
-import { EmptyState, IconButton } from "@/components/shared"
+import { DeckIcon, EmptyState, IconButton } from "@/components/shared"
 import {
   Tooltip,
   TooltipContent,
@@ -53,9 +38,7 @@ export function WeekActivity({ compact = false }: { compact?: boolean }) {
             }
           >
             <span className="week-track">
-              <span
-                style={{ height: `${Math.max(4, (counts[i] / max) * 100)}%` }}
-              />
+              <span style={{ height: `${(counts[i] / max) * 100}%` }} />
             </span>
             <span className="week-day">
               {d.toLocaleDateString("en", { weekday: "narrow" })}
@@ -73,291 +56,176 @@ export function WeekActivity({ compact = false }: { compact?: boolean }) {
     </div>
   )
 }
+
 export function Overview() {
   const { decks, cards, reviews, now, editDeck } = useApp()
-  const [filter, setFilter] = useState<"all" | "due">("all")
   const starter = useLiveQuery(() => db.settings.get("starterNotice"))
-  const due = queueFor(cards, now).length
+  const queue = queueFor(cards, now)
   const reviewedToday = reviews.filter(
     (r) => dateKey(r.at) === dateKey(now),
   ).length
-  const streak = streakFor(reviews, new Date(now))
-  const retention = reviews.length
-    ? Math.round(
-        (reviews.filter((r) => r.rating > 1).length / reviews.length) * 100,
-      )
-    : null
-  const visible = decks.filter(
-    (d) =>
-      filter === "all" ||
-      queueFor(
-        cards.filter((c) => c.deckId === d.id),
-        now,
-      ).length,
+  const weekStart = new Date(now)
+  weekStart.setDate(weekStart.getDate() - 6)
+  weekStart.setHours(0, 0, 0, 0)
+  const reviewedThisWeek = reviews.filter(
+    (r) => r.at >= +weekStart && r.at <= now,
+  ).length
+  const dueByDeck = new Map<string, number>()
+  for (const item of queue) {
+    dueByDeck.set(item.card.deckId, (dueByDeck.get(item.card.deckId) ?? 0) + 1)
+  }
+  // Queue order puts the deck with the oldest due review first.
+  const readyDecks = [...dueByDeck.keys()].flatMap((id) =>
+    decks.filter((deck) => deck.id === id),
   )
+  const visible = (
+    queue.length
+      ? readyDecks
+      : decks.toSorted((a, b) => b.createdAt - a.createdAt)
+  ).slice(0, 4)
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="overview-page">
       <div className="page-heading">
-        <div>
-          <div className="eyebrow">YOUR DAILY DOSE OF DISCOVERY</div>
-          <h1>
-            A little practice. A lasting memory
-            <span className="text-primary">.</span>
-          </h1>
-          <p>Pick up where you left off, or learn something new.</p>
-        </div>
+        <h1>Overview</h1>
         <Button variant="outline" onClick={() => editDeck()}>
           <Plus />
           New deck
         </Button>
       </div>
-      <section className="review-hero" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <div className="hero-eyebrow">
-            <span className="hero-spark">
-              <Sparkles size={14} />
-            </span>
-            SMALL STEPS, STRONGER CONNECTIONS
+      {cards.length ? (
+        <section
+          className="review-summary"
+          aria-labelledby="review-summary-title"
+        >
+          <div>
+            <h2 id="review-summary-title">
+              {queue.length
+                ? `${queue.length} ${queue.length === 1 ? "review" : "reviews"} ready`
+                : "No reviews due now"}
+            </h2>
+            <p>{reviewedToday} reviewed today</p>
           </div>
-          <h2 id="hero-title">
-            Make a little room
-            <br />
-            for what you know.
-          </h2>
-          <p>
-            {due ? (
-              <>
-                <strong>{due} reviews</strong> are ready. A few focused minutes
-                go a long way.
-              </>
-            ) : (
-              <>You’re all caught up. Your next discovery is waiting.</>
-            )}
-          </p>
+          {queue.length > 0 && (
+            <Button
+              nativeButton={false}
+              render={<Link to="/study" search={{ deck: undefined }} />}
+            >
+              Start reviewing <ArrowRight />
+            </Button>
+          )}
+        </section>
+      ) : (
+        <EmptyState
+          title={
+            decks.length
+              ? "Add cards to start reviewing"
+              : "Create your first deck"
+          }
+          description={
+            decks.length
+              ? "Open a deck and add a prompt and answer."
+              : "Group your cards by subject, or restore a library from a backup."
+          }
+        >
+          {decks.length ? (
+            <Button nativeButton={false} render={<Link to="/decks" />}>
+              Open decks
+            </Button>
+          ) : (
+            <Button onClick={() => editDeck()}>
+              <Plus />
+              Create deck
+            </Button>
+          )}
           <Button
-            size="lg"
+            variant="outline"
             nativeButton={false}
-            render={
-              <Link
-                to={due ? "/study" : "/decks"}
-                search={{ deck: undefined }}
-              />
-            }
+            render={<Link to="/settings" />}
           >
-            {due ? "Start reviewing" : "Explore your decks"}
-            <ArrowRight />
-            <span className="hero-button-divider" />
-            {due
-              ? `~${Math.max(1, Math.ceil((due * 15) / 60))} min`
-              : "Your library"}
+            Import backup
           </Button>
-        </div>
-        <div className="hero-art" aria-hidden="true">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <span className="art-spark spark-one">✧</span>
-          <span className="art-spark spark-two">✦</span>
-          <div className="art-card art-back">
-            <div />
-            <div />
-            <div />
-          </div>
-          <div className="art-card art-front">
-            <div className="art-card-top">
-              <span>ONE CARD AT A TIME</span>
-              <Layers size={15} />
-            </div>
-            <div className="art-word">
-              recall<span>.</span>
-            </div>
-            <div className="art-pronunciation">/rɪˈkɔːl/ · verb</div>
-            <div className="art-card-rule" />
-            <p>
-              To bring back to mind.
-              <br />
-              To make it yours.
-            </p>
-            <span className="art-check">
-              <Check size={15} />
-            </span>
-          </div>
-          <span className="art-dot" />
-        </div>
-      </section>
-      <section className="stats-grid" aria-label="Learning statistics">
-        {[
-          {
-            label: "Ready to review",
-            value: due,
-            icon: Layers,
-            note: "a fresh chance to remember",
-            color: "sage",
-          },
-          {
-            label: "Reviewed today",
-            value: reviewedToday,
-            icon: CheckCheck,
-            note: "one step further",
-            color: "blue",
-          },
-          {
-            label: "Current streak",
-            value: `${streak}`,
-            suffix: streak === 1 ? "day" : "days",
-            icon: Flame,
-            note: "consistency over intensity",
-            color: "peach",
-          },
-          {
-            label: "Recall rate",
-            value: retention === null ? "—" : `${retention}%`,
-            icon: Target,
-            note:
-              retention === null
-                ? "your story starts here"
-                : "across all your reviews",
-            color: "violet",
-          },
-        ].map((stat) => (
-          <Card key={stat.label} className="stat-card">
-            <div className="stat-top">
-              <span>{stat.label}</span>
-              <span className={`stat-icon color-${stat.color}`}>
-                <stat.icon size={16} />
-              </span>
-            </div>
-            <div className="stat-value">
-              {stat.value}
-              <span>{stat.suffix}</span>
-            </div>
-            <p>{stat.note}</p>
-          </Card>
-        ))}
-      </section>
+        </EmptyState>
+      )}
       <div className="overview-bottom">
-        <section>
+        <section aria-labelledby="overview-decks-title">
           <div className="section-heading">
-            <div className="flex items-center gap-2.5">
-              <h2>Your decks</h2>
-              <span className="count-badge">{decks.length}</span>
-            </div>
+            <h2 id="overview-decks-title">
+              {queue.length
+                ? "Decks ready to review"
+                : "Recently created decks"}
+            </h2>
             <Button
               variant="ghost"
               size="sm"
               nativeButton={false}
               render={<Link to="/decks" />}
             >
-              View all
-              <ArrowUpRight />
-            </Button>
-          </div>
-          <div
-            className="deck-filter-tabs"
-            role="group"
-            aria-label="Filter decks"
-          >
-            <Button
-              variant={filter === "all" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setFilter("all")}
-            >
-              All decks
-            </Button>
-            <Button
-              variant={filter === "due" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setFilter("due")}
-            >
-              Due for review
-              <span className="tiny-dot" />
+              All decks <ArrowRight />
             </Button>
           </div>
           {visible.length ? (
-            <div className="deck-grid">
-              {visible.slice(0, 4).map((deck) => (
-                <DeckTile key={deck.id} deck={deck} />
+            <Card className="overview-decks">
+              {visible.map((deck) => (
+                <div className="overview-deck-row" key={deck.id}>
+                  <Link
+                    to="/decks/$deckId"
+                    params={{ deckId: deck.id }}
+                    className="overview-deck-link"
+                  >
+                    <DeckIcon small deck={deck} />
+                    <span>{deck.name}</span>
+                  </Link>
+                  <span className="overview-deck-count">
+                    {dueByDeck.get(deck.id) ?? 0} to review
+                  </span>
+                  {!!dueByDeck.get(deck.id) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      nativeButton={false}
+                      aria-label={`Review ${deck.name}`}
+                      render={<Link to="/study" search={{ deck: deck.id }} />}
+                    >
+                      Review <ArrowRight />
+                    </Button>
+                  )}
+                </div>
               ))}
-            </div>
+            </Card>
           ) : (
-            <EmptyState
-              title={
-                filter === "due"
-                  ? "A clear mind, a clear queue."
-                  : "Your first deck awaits."
-              }
-              description={
-                filter === "due"
-                  ? "Come back when your next reviews are due."
-                  : "Collect the things you want to remember."
-              }
-            >
-              <Button onClick={() => editDeck()}>
-                <Plus />
-                Create deck
-              </Button>
-            </EmptyState>
+            <p className="muted-description">No decks yet</p>
           )}
         </section>
-        <aside className="insights" aria-label="Learning insights">
+        <section aria-labelledby="overview-activity-title">
           <Card className="activity-card">
             <div className="section-heading">
-              <h3>Your rhythm</h3>
-              <span className="subtle-icon">
-                <BarIcon />
-              </span>
+              <h2 id="overview-activity-title">This week</h2>
+              <Link to="/activity" className="text-link">
+                Activity <ArrowRight size={13} />
+              </Link>
             </div>
-            <p className="muted-description">A little progress adds up.</p>
             <WeekActivity compact />
             <div className="activity-summary">
               <span>
-                <strong>
-                  {reviews.filter((r) => r.at >= now - 7 * 86400000).length}
-                </strong>{" "}
-                reviews this week
-              </span>
-              <span className="activity-summary-icon">
-                <ArrowUpRight size={15} />
+                <strong>{reviewedThisWeek}</strong> reviews in the last 7 days
               </span>
             </div>
-            <Link to="/activity" className="text-link">
-              Explore your activity
-              <ArrowRight size={13} />
-            </Link>
           </Card>
-          <Card className="tip-card">
-            <span className="tip-icon">
-              <Sparkles size={18} />
-            </span>
-            <div className="eyebrow">BETTER, NOT LONGER</div>
-            <h3>
-              Let forgetting
-              <br />
-              do some of the work.
-            </h3>
-            <p>
-              A little effort to recall builds a stronger memory. We’ll bring
-              each card back at just the right time.
-            </p>
-            <span className="tip-footer">
-              <Clock3 size={13} />
-              Thoughtfully spaced with FSRS
-            </span>
-          </Card>
-        </aside>
+        </section>
       </div>
-      {starter?.value === "true" && (
+      {decks.length > 0 && starter?.value === "true" && (
         <div className="starter-notice">
-          <span className="flex items-center gap-2">
-            <Sparkles size={14} />
-            <span>
-              A few starter decks to make yourself at home. Edit them, keep
-              them, or make your own.
-            </span>
-          </span>
+          <div>
+            <p>Starter decks are included. Edit or delete them as needed.</p>
+            <p>
+              This library is saved in this browser only.{" "}
+              <Link to="/settings" className="underline underline-offset-2">
+                Export backups
+              </Link>{" "}
+              to keep a separate copy.
+            </p>
+          </div>
           <IconButton
             label="Dismiss starter note"
             size="icon-xs"
@@ -369,16 +237,6 @@ export function Overview() {
           </IconButton>
         </div>
       )}
-    </motion.div>
-  )
-}
-function BarIcon() {
-  return (
-    <span className="mini-bars">
-      <i />
-      <i />
-      <i />
-      <i />
-    </span>
+    </div>
   )
 }

@@ -31,18 +31,12 @@ export function Activity() {
   return (
     <div>
       <div className="page-heading">
-        <div>
-          <div className="eyebrow">THE BIGGER PICTURE</div>
-          <h1>
-            Look how far you’ve come<span className="text-primary">.</span>
-          </h1>
-          <p>Progress isn’t always a straight line. Every review counts.</p>
-        </div>
+        <h1>Activity</h1>
         <Button
           nativeButton={false}
           render={<Link to="/study" search={{ deck: undefined }} />}
         >
-          Keep learning
+          Review
           <ArrowRight />
         </Button>
       </div>
@@ -77,13 +71,17 @@ export function Activity() {
           </Card>
         ))}
       </div>
+      <p className="muted-description mb-6">
+        Recall rate is the share of all reviews rated Hard, Good, or Easy rather
+        than Again. Cards learned counts cards in the regular review stage, not
+        permanent mastery.
+      </p>
       <div className="activity-layout">
         <Card className="heatmap-card">
           <div className="section-heading">
-            <h2>A habit, one day at a time</h2>
+            <h2>Review history</h2>
             <span className="text-xs text-muted-foreground">Last 16 weeks</span>
           </div>
-          <p className="muted-description">Your personal trail of curiosity.</p>
           <div className="heatmap">
             {days.map((d) => {
               const count = counts.get(dateKey(+d)) || 0
@@ -167,7 +165,7 @@ export function Activity() {
           </Card>
         ) : (
           <EmptyState
-            title="A fresh page"
+            title="No reviews yet"
             description="Your first review will be the start of your story."
           >
             <Button

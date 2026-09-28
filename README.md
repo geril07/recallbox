@@ -1,6 +1,6 @@
 # Recallbox
 
-A local-first flashcard app. A little practice. A lasting memory.
+A local-first flashcard app.
 
 ## Run
 
@@ -35,7 +35,8 @@ If Chromium is not installed for Playwright, run `npx playwright install chromiu
 - FSRS v6, via `ts-fsrs`, with 90% target retention. Forward and reverse schedules are independent. Disabling reverse practice preserves its schedule.
 - Due-only review sessions. Space reveals the answer; 1–4 grade it. Each direction appears once in a session; short learning steps return when due in a later session. Progress saves after every answer.
 - Real activity, recall rate, and calendar-day streaks. “Learned” means the FSRS Review state, not permanent mastery.
-- Light/dark themes, responsive layouts, keyboard controls, tooltips, and reduced-motion support.
+- System/light/dark themes with a shared preference in the header and settings. System follows device appearance changes. Responsive layouts, keyboard controls, tooltips, and reduced-motion support.
+- A compact overview with due reviews, decks ordered by their oldest due review, and activity for the last seven calendar days. When nothing is due, it shows recently created decks.
 - Installable PWA. The production app works offline after its first successful load. Updates prompt before reloading, so an open editor is not silently lost.
 - Versioned ZIP backups containing `recallbox.json` and `assets/<id>`. Imports validate schemas, unique IDs, references, and bounded decompressed sizes before an atomic replacement. Restore is not a merge.
 - Optional manual Google Drive backups in a visible **My Drive / Recallbox** folder.
@@ -65,7 +66,7 @@ Backups are ordinary, timestamped ZIP files in the visible Recallbox folder. The
 
 Your library belongs to this **browser profile and origin**. A different browser, port, domain, or device has a separate library. IndexedDB transactions keep related changes together. An outdated review from another tab is rejected; saving an older editor preserves newer review schedules. Unused uploaded images are removed after card/deck edits or deletion.
 
-- Clearing site data, private browsing cleanup, or losing your device can remove local data. Use **Protect local storage** and keep regular ZIP backups.
+- Clearing site data, private browsing cleanup, or losing your device can remove local data. **Keep browser data** requests persistent storage to prevent automatic removal under storage pressure; the browser can decline. This is not encryption or a backup. Keep regular ZIP backups.
 - Data and ZIP files are **not encrypted by Recallbox**. Device security and Drive account security still matter.
 - Linked external images remain links; they need a network connection and are not bundled in backups. Paste or upload an image for an offline copy.
 - ZIP import is limited to 100 MB compressed and expanded content. Large libraries and review histories have not been load-tested; the current dashboard reads the local library into memory.

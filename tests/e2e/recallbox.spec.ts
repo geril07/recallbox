@@ -287,7 +287,8 @@ test("renders every screen without overflow or serious accessibility violations"
     fullPage: true,
     scale: "css",
   })
-  await page.getByRole("button", { name: "Switch to dark theme" }).click()
+  await page.getByRole("button", { name: "Color theme", exact: true }).click()
+  await page.getByRole("menuitemradio", { name: "Dark", exact: true }).click()
   await page.reload()
   await expect(page.locator("html")).toHaveClass("dark")
   await expect(page.getByRole("main").locator(":scope > div")).toHaveCSS(
@@ -310,6 +311,152 @@ test("renders every screen without overflow or serious accessibility violations"
   expect(errors).toEqual([])
 })
 
+test("theme controls share a persisted preference and follow system changes", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" })
+  await page.goto("/")
+  await expect(page.locator("html")).toHaveClass("dark")
+  await page.getByRole("button", { name: "Color theme", exact: true }).click()
+  await expect(
+    page.getByRole("menuitemradio", { name: "System", exact: true }),
+  ).toBeChecked()
+  await page.keyboard.press("Escape")
+  await page.emulateMedia({ colorScheme: "light" })
+  await expect(page.locator("html")).not.toHaveClass("dark")
+
+  await page.getByRole("button", { name: "Color theme", exact: true }).click()
+  await page.getByRole("menuitemradio", { name: "Dark", exact: true }).click()
+  await expect(page.locator("html")).toHaveClass("dark")
+  await page.goto("/settings")
+  await expect(
+    page.getByRole("button", { name: "Dark", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true")
+  await page.getByRole("button", { name: "System", exact: true }).click()
+  await expect(page.locator("html")).not.toHaveClass("dark")
+  await page.reload()
+  await expect(
+    page.getByRole("button", { name: "System", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true")
+  await page.emulateMedia({ colorScheme: "dark" })
+  await expect(page.locator("html")).toHaveClass("dark")
+
+  await page.getByRole("button", { name: "Light", exact: true }).click()
+  await expect(page.locator("html")).not.toHaveClass("dark")
+  await page.emulateMedia({ colorScheme: "light" })
+  await page.emulateMedia({ colorScheme: "dark" })
+  await expect(page.locator("html")).not.toHaveClass("dark")
+  await page.reload()
+  await expect(page.locator("html")).not.toHaveClass("dark")
+  await page.getByRole("button", { name: "Color theme", exact: true }).click()
+  await expect(
+    page.getByRole("menuitemradio", { name: "Light", exact: true }),
+  ).toBeChecked()
+})
+
+test("overview reflects completed reviews and a cleared queue", async ({
+  page,
+}) => {
+  await page.goto("/")
+  await expect(
+    page.getByRole("heading", { name: "18 reviews ready", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("0 reviewed today", { exact: true }),
+  ).toBeVisible()
+  await page.getByRole("button", { name: "Dismiss starter note" }).click()
+  await page.reload()
+  await expect(
+    page.getByRole("button", { name: "Dismiss starter note" }),
+  ).toHaveCount(0)
+  await page
+    .getByRole("button", { name: "Review Design essentials", exact: true })
+    .click()
+  for (let i = 0; i < 4; i++) {
+    await expect(
+      page.getByText(`${i} of 4 reviewed`, { exact: true }),
+    ).toBeVisible()
+    await page.getByRole("button", { name: "Reveal answer" }).click()
+    await page.getByRole("button", { name: /Easy/ }).click()
+  }
+  await expect(
+    page.getByRole("heading", { name: "That’s time well spent." }),
+  ).toBeVisible()
+  await page.goto("/")
+  await expect(
+    page.getByRole("heading", { name: "14 reviews ready", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("4 reviewed today", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page
+      .getByRole("main")
+      .getByRole("link", { name: "Design essentials", exact: true }),
+  ).toHaveCount(0)
+  await page.getByRole("button", { name: "Start reviewing" }).click()
+  for (let i = 0; i < 14; i++) {
+    await expect(
+      page.getByText(`${i} of 14 reviewed`, { exact: true }),
+    ).toBeVisible()
+    await page.getByRole("button", { name: "Reveal answer" }).click()
+    await page.getByRole("button", { name: /Easy/ }).click()
+  }
+  await expect(
+    page.getByRole("heading", { name: "That’s time well spent." }),
+  ).toBeVisible()
+  await page.goto("/")
+  await expect(
+    page.getByRole("heading", { name: "No reviews due now" }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("18 reviewed today", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Start reviewing" }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole("heading", { name: "Recently created decks" }),
+  ).toBeVisible()
+})
+
+test("overview offers creation and restore for an empty library", async ({
+  page,
+}) => {
+  await page.goto("/decks")
+  for (const name of [
+    "Everyday Spanish",
+    "Design essentials",
+    "The curious mind",
+    "Modern JavaScript",
+  ]) {
+    await page
+      .getByRole("button", { name: `Options for ${name}`, exact: true })
+      .click()
+    await page.getByRole("menuitem", { name: "Delete deck" }).click()
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Delete", exact: true })
+      .click()
+    await expect(page.getByRole("alertdialog")).toHaveCount(0)
+  }
+  await page.goto("/")
+  await expect(
+    page.getByRole("heading", { name: "Create your first deck" }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Start reviewing" }),
+  ).toHaveCount(0)
+  await page.getByRole("button", { name: "Import backup", exact: true }).click()
+  await expect(page).toHaveURL(/\/settings$/)
+  await page.goto("/")
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Create deck", exact: true })
+    .click()
+  await expect(page.getByLabel("Deck name")).toBeVisible()
+})
+
 test("loads and reviews offline after the first successful visit", async ({
   page,
   context,
@@ -325,7 +472,7 @@ test("loads and reviews offline after the first successful visit", async ({
   await context.setOffline(true)
   await page.reload()
   await expect(
-    page.getByRole("heading", { name: /A little practice/ }),
+    page.getByRole("heading", { name: "Overview", exact: true }),
   ).toBeVisible()
   await page.getByRole("button", { name: /Start reviewing/ }).click()
   await page.getByRole("button", { name: "Reveal answer" }).click()

@@ -70,13 +70,7 @@ export function Decks() {
   return (
     <div>
       <div className="page-heading">
-        <div>
-          <div className="eyebrow">CURATE YOUR CURIOSITY</div>
-          <h1>
-            My decks<span className="text-primary">.</span>
-          </h1>
-          <p>A home for everything you want to keep with you.</p>
-        </div>
+        <h1>My decks</h1>
         <Button onClick={() => editDeck()}>
           <Plus />
           New deck
@@ -169,20 +163,17 @@ export function Decks() {
               <span>
                 <Plus />
               </span>
-              <strong>A new curiosity?</strong>
-              <p>Create a deck</p>
+              <strong>Create a deck</strong>
             </button>
           )}
         </div>
       ) : (
         <EmptyState
-          title={
-            decks.length ? "No decks found" : "Start with a little curiosity"
-          }
+          title={decks.length ? "No decks found" : "Create your first deck"}
           description={
             decks.length
               ? "Try another search or clear your filters."
-              : "Create your first deck and add something worth remembering."
+              : "Group your cards by subject, then add a prompt and answer."
           }
         >
           <Button onClick={() => editDeck()}>
@@ -512,10 +503,7 @@ export function TagsPage() {
     <div>
       <div className="page-heading">
         <div>
-          <div className="eyebrow">CONNECT THE DOTS</div>
-          <h1>
-            A world of connections<span className="text-primary">.</span>
-          </h1>
+          <h1>Tags</h1>
           <p>Tags bring related ideas together, across every deck.</p>
         </div>
       </div>

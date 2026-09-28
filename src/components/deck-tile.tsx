@@ -96,10 +96,7 @@ export function DeckTile({
             {deck.name}
             <ArrowUpRight size={17} />
           </h3>
-          <p>
-            {deck.description ||
-              "A new collection of things worth remembering."}
-          </p>
+          {deck.description && <p>{deck.description}</p>}
         </Link>
         <div className="deck-tags">
           {deck.tags.slice(0, 3).map((tag) => (

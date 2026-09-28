@@ -11,11 +11,12 @@ import {
   Monitor,
   Moon,
   RefreshCw,
-  ShieldCheck,
+  Info,
   Sun,
   Unplug,
 } from "lucide-react"
 import { useApp } from "@/lib/app-context"
+import { themeOptions } from "@/lib/theme"
 import { db, setSetting } from "@/lib/db"
 import {
   backupName,
@@ -49,7 +50,8 @@ async function exportZip() {
 }
 
 export function Settings() {
-  const { decks, cards, theme, toggleTheme } = useApp()
+  const { decks, cards, theme, setTheme } = useApp()
+  const canPersist = typeof navigator.storage?.persist === "function"
   const [busy, setBusy] = useState("")
   const [backup, setBackup] = useState<Backup | null>(null)
   const [googleReady, setGoogleReady] = useState(false)
@@ -111,47 +113,43 @@ export function Settings() {
   return (
     <div className="settings-page">
       <div className="page-heading">
-        <div>
-          <div className="eyebrow">ALWAYS YOURS</div>
-          <h1>
-            A space that feels like you<span className="text-primary">.</span>
-          </h1>
-          <p>Your preferences, your data, your peace of mind.</p>
-        </div>
+        <h1>Settings & backup</h1>
       </div>
       <section className="settings-section">
         <div className="settings-section-label">
           <Monitor />
           <div>
             <h2>Appearance</h2>
-            <p>A little easier on the eyes.</p>
           </div>
         </div>
         <Card className="settings-card">
           <div className="setting-row">
             <div>
               <h3>Color theme</h3>
-              <p>Choose the light that suits you.</p>
+              <p>System follows your device’s appearance.</p>
             </div>
-            <div className="theme-options">
-              <Button
-                variant={theme === "light" ? "secondary" : "ghost"}
-                onClick={() => {
-                  if (theme !== "light") toggleTheme()
-                }}
-              >
-                <Sun />
-                Light{theme === "light" && <Check className="size-3" />}
-              </Button>
-              <Button
-                variant={theme === "dark" ? "secondary" : "ghost"}
-                onClick={() => {
-                  if (theme !== "dark") toggleTheme()
-                }}
-              >
-                <Moon />
-                Dark{theme === "dark" && <Check className="size-3" />}
-              </Button>
+            <div
+              className="theme-options"
+              role="group"
+              aria-label="Color theme"
+            >
+              {themeOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  variant={theme === option.value ? "secondary" : "ghost"}
+                  aria-pressed={theme === option.value}
+                  onClick={() => setTheme(option.value)}
+                >
+                  {option.value === "system" ? (
+                    <Monitor />
+                  ) : option.value === "dark" ? (
+                    <Moon />
+                  ) : (
+                    <Sun />
+                  )}
+                  {option.label}
+                </Button>
+              ))}
             </div>
           </div>
         </Card>
@@ -160,17 +158,17 @@ export function Settings() {
         <div className="settings-section-label">
           <HardDrive />
           <div>
-            <h2>On this device</h2>
-            <p>Local first. No account needed.</p>
+            <h2>Browser storage</h2>
           </div>
         </div>
         <Card className="settings-card">
           <div className="setting-row">
             <div>
-              <h3>
-                Your library is stored locally
-                <Badge variant="secondary">IndexedDB</Badge>
-              </h3>
+              <h3>Saved in this browser</h3>
+              <p>
+                Other browsers, browser profiles, and site addresses have
+                separate libraries. No account is needed.
+              </p>
               <p>
                 {decks.length} decks · {cards.length} cards
                 {storage.usage !== undefined
@@ -178,46 +176,44 @@ export function Settings() {
                   : ""}
               </p>
             </div>
-            <ShieldCheck className="size-5 text-primary" />
           </div>
           <div className="setting-row">
             <div>
-              <h3>
-                {storage.persisted
-                  ? "Persistent storage enabled"
-                  : "Protect local storage"}
-              </h3>
+              <h3>Keep browser data</h3>
               <p>
                 {storage.persisted
-                  ? "Your browser will not automatically evict this site’s data."
-                  : "Ask your browser to keep Recallbox data on this device."}
+                  ? "This browser has agreed not to automatically remove your library when storage is low. This is not a backup."
+                  : canPersist
+                    ? "Ask this browser not to automatically remove your library when storage is low. This is not a backup."
+                    : "This browser does not support requests to keep site data. Export regular backups."}
               </p>
             </div>
             <Button
               variant="outline"
-              disabled={storage.persisted || !!busy}
+              disabled={!canPersist || storage.persisted || !!busy}
               onClick={() =>
                 run("persist", async () => {
                   const persisted = await navigator.storage?.persist()
                   setStorage((s) => ({ ...s, persisted }))
                   notify(
                     persisted
-                      ? "Persistent storage enabled"
-                      : "Your browser did not grant persistent storage. Keep regular backups.",
+                      ? "Browser data retention enabled. Keep regular backups."
+                      : "Your browser did not grant this request. Export regular backups.",
                   )
                 })
               }
             >
-              {storage.persisted ? <Check /> : <ShieldCheck />}
-              {storage.persisted ? "Protected" : "Protect"}
+              {storage.persisted && <Check />}
+              {storage.persisted ? "Enabled" : "Request"}
             </Button>
           </div>
           <div className="settings-info">
-            <ShieldCheck size={15} />
+            <Info size={15} />
             <p>
-              Clearing site data or losing this device removes your library.
-              Keep a backup somewhere safe. Local data is not encrypted by
-              Recallbox.
+              Clearing site data or losing this device can remove your library.
+              Private browsing data may be deleted when you close the session.
+              Keep a separate backup. Recallbox does not encrypt local data or
+              backup files.
             </p>
           </div>
         </Card>
@@ -226,8 +222,7 @@ export function Settings() {
         <div className="settings-section-label">
           <ArrowDownToLine />
           <div>
-            <h2>Take your knowledge with you</h2>
-            <p>One ZIP. Your entire library.</p>
+            <h2>Backup files</h2>
           </div>
         </div>
         <Card className="settings-card">
@@ -258,7 +253,7 @@ export function Settings() {
             <div>
               <h3>Restore from a backup</h3>
               <p>
-                Replaces this device’s library after you confirm. Up to 100 MB.
+                Replaces this browser’s library after you confirm. Up to 100 MB.
               </p>
             </div>
             <Button
@@ -295,8 +290,7 @@ export function Settings() {
         <div className="settings-section-label">
           <Cloud />
           <div>
-            <h2>A second home on Google Drive</h2>
-            <p>A visible folder. Fully in your control.</p>
+            <h2>Google Drive backup</h2>
           </div>
         </div>
         <Card className="settings-card">
@@ -318,7 +312,9 @@ export function Settings() {
                   Google Drive
                   {connected && <Badge variant="secondary">Connected</Badge>}
                 </h3>
-                <p>Saved to My Drive / Recallbox. Never hidden app storage.</p>
+                <p>
+                  Manual backups to My Drive / Recallbox. No automatic sync.
+                </p>
               </div>
             </div>
             {connected ? (
@@ -356,10 +352,8 @@ export function Settings() {
             <div className="settings-info">
               <Cloud size={15} />
               <p>
-                Google Drive setup is needed for this installation. Set{" "}
-                <code>VITE_GOOGLE_CLIENT_ID</code> in <code>.env.local</code>.
-                See <code>README.md</code> for the Google Cloud steps. ZIP
-                backups work without it.
+                Google Drive is not configured for this installation. You can
+                still export and import backup files.
               </p>
             </div>
           )}
@@ -472,22 +466,21 @@ export function Settings() {
                 ))
               ) : (
                 <p className="p-5 text-sm text-muted-foreground">
-                  No backups here yet. Your first one is a click away.
+                  No Google Drive backups yet.
                 </p>
               )}
             </>
           )}
         </Card>
       </section>
-      <div className="settings-about">
-        <span>
-          recallbox<span className="text-primary">.</span>
-        </span>
-        <p>Built for a curious mind. Designed to stay yours.</p>
-        <small>
-          FSRS · 90% target retention · Independent forward & reverse schedules
-        </small>
-      </div>
+      <details className="settings-about">
+        <summary>About review scheduling</summary>
+        <p>
+          Recallbox uses FSRS to schedule reviews, with a 90% target retention.
+          This is a scheduling target, not a guarantee of recall. Forward and
+          reverse reviews have separate schedules.
+        </p>
+      </details>
       {backup && (
         <Confirm
           title="Replace your local library?"

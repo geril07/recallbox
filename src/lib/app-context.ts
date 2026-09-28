@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react"
 import type { Deck, Flashcard, Review } from "@/lib/model"
+import type { Theme } from "@/lib/theme"
 export interface AppState {
   decks: Deck[]
   cards: Flashcard[]
@@ -7,8 +8,8 @@ export interface AppState {
   now: number
   editDeck: (deck?: Deck) => void
   editCard: (card?: Flashcard, deckId?: string) => void
-  theme: "light" | "dark"
-  toggleTheme: () => void
+  theme: Theme
+  setTheme: (theme: Theme) => void
 }
 export const AppContext = createContext<AppState | null>(null)
 export function useApp() {
