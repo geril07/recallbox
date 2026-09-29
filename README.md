@@ -2,6 +2,10 @@
 
 A local-first flashcard app.
 
+**51-second overview · Sound on.**
+
+https://github.com/user-attachments/assets/07affc21-f6c5-4cb3-91e9-6023839d790f
+
 ## Run
 
 Use Node.js 22.12+ and npm.
