@@ -1607,19 +1607,64 @@
   border-radius: 3px;
   font-size: 9px;
 }
-.drive-icon {
-  display: grid;
-  place-items: center;
-  background: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
+.backup-action {
+  padding: 23px;
+  border-bottom: 1px solid var(--border);
 }
-.drive-icon svg {
-  width: 24px;
-  height: 24px;
+.backup-action h3 {
+  font-size: 14px;
+  font-weight: 550;
+}
+.backup-action p,
+.backup-connection p,
+.backup-action small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 5px;
+}
+.backup-action small {
+  display: block;
+}
+.backup-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.backup-action .backup-buttons {
+  margin-block: 16px 10px;
+}
+.backup-connection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 23px;
+  font-size: 12px;
+}
+.backup-notice {
+  padding: 16px;
+  background: var(--muted);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.backup-notice [data-slot="button"] {
+  margin-top: 10px;
+}
+.backup-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  font-size: 13px;
+}
+.backup-review {
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.6;
 }
 .drive-files-header {
   display: flex;
@@ -1629,7 +1674,8 @@
   font-size: 9px;
   letter-spacing: 1px;
   color: var(--muted-foreground);
-  padding: 10px 23px;
+  padding: 10px 0;
+  flex-wrap: wrap;
   border-block: 1px solid var(--border);
 }
 .drive-files-header small {
@@ -1641,7 +1687,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-  padding: 13px 23px;
+  padding: 13px 0;
+  flex-wrap: wrap;
+}
+.drive-file > span {
+  flex: 1 1 180px;
 }
 .drive-file + .drive-file {
   border-top: 1px solid var(--border);
@@ -1650,9 +1700,7 @@
   display: block;
   font-size: 11px;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 .drive-file small {
   display: block;

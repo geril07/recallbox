@@ -11,6 +11,7 @@
     "test": "vitest run",
     "icons": "node scripts/build-icons.mjs",
     "test:e2e": "playwright test",
+    "test:drive": "playwright test --config playwright.drive.config.ts",
     "format": "oxfmt .",
     "format:check": "oxfmt --check ."
   },
@@ -41,7 +42,9 @@
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
     "@tanstack/router-plugin": "^1.168.41",
+    "@types/gapi": "^0.0.47",
     "@types/google.accounts": "^0.0.18",
+    "@types/google.picker": "^0.0.52",
     "@types/node": "^24.19.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",

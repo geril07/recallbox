@@ -390,7 +390,7 @@ test("ZIP restore recovers a deleted deck and its local image", async ({
   await newCard(page, true)
   await page.goto("/settings")
   const downloadPromise = page.waitForEvent("download")
-  await page.getByRole("button", { name: "Export ZIP" }).click()
+  await page.getByRole("button", { name: "Download ZIP" }).click()
   const download = await downloadPromise
   const backupPath = testInfo.outputPath("backup.zip")
   await download.saveAs(backupPath)
@@ -406,11 +406,19 @@ test("ZIP restore recovers a deleted deck and its local image", async ({
   ).toHaveCount(0)
   await page.goto("/settings")
   await page.getByLabel("Import backup file").setInputFiles(backupPath)
-  await expect(page.getByRole("alertdialog")).toContainText("5 decks")
-  await page
-    .getByRole("button", { name: "Restore backup", exact: true })
+  const review = page.getByRole("dialog", { name: "Review backup" })
+  await expect(review).toContainText("5 decks")
+  await expect(review).toContainText("Source: This device")
+  await expect(review).toContainText("It does not merge.")
+  const safetyDownload = page.waitForEvent("download")
+  await review
+    .getByRole("button", { name: "Download current library first" })
     .click()
-  await expect(page.getByRole("alertdialog")).toHaveCount(0)
+  await safetyDownload
+  await page
+    .getByRole("button", { name: "Replace library", exact: true })
+    .click()
+  await expect(review).toHaveCount(0)
   await page.goto("/decks")
   await page
     .getByRole("main")
@@ -721,9 +729,12 @@ test("rejects an invalid import without replacing the library", async ({
     mimeType: "application/zip",
     buffer: Buffer.from("not a zip"),
   })
-  await expect(
-    page.getByRole("region", { name: "Notifications" }),
-  ).toContainText(/zip|end of central directory/i)
+  await expect(page.getByRole("alert")).toContainText(
+    /zip|end of central directory/i,
+  )
+  await expect(page.getByRole("dialog", { name: "Review backup" })).toHaveCount(
+    0,
+  )
   await expect(page.getByText(/4 decks · 14 cards/)).toBeVisible()
 })
 

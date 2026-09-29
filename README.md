@@ -18,6 +18,7 @@ npm run build       # strict TypeScript check + production build
 npm run preview     # serve the production PWA
 npm test            # storage, scheduling, and ZIP integrity tests
 npm run test:e2e    # desktop + Android-sized Chromium tests
+npm run test:drive  # same browsers, mocked Google Identity / Drive / Picker
 npm run lint
 npm run format       # format the project with Oxfmt
 npm run format:check # check formatting without writing
@@ -48,21 +49,25 @@ If Chromium is not installed for Playwright, run `npx playwright install chromiu
 Google Drive needs a public OAuth client ID for your deployment. ZIP export/import works without it.
 
 1. Create a project in [Google Cloud Console](https://console.cloud.google.com/).
-2. Enable **Google Drive API**.
+2. Enable **Google Drive API** and **Google Picker API**.
 3. Configure the **Google Auth Platform** consent screen. If the app is in testing, add your Google account as a test user.
 4. Create an OAuth client of type **Web application**.
 5. Add the exact **Authorized JavaScript origins** you use, for example:
    - `http://localhost:5173` for development
    - `http://localhost:4173` for preview
    - `https://your-recallbox-domain.example` for production
-6. Copy `.env.example` to `.env.local`, set `VITE_GOOGLE_CLIENT_ID`, and restart Vite or rebuild.
-7. Open **Settings & backup → Connect Drive** and grant access. Then choose **Back up now**.
+6. Create a browser API key in the same Cloud project. Restrict it to **Google Picker API** (and **Google Drive API** if used directly with the key). Follow Google's current Picker guidance for website restrictions: include your app origins and `https://docs.google.com/*`, because Picker runs in a Google-hosted iframe.
+7. Copy `.env.example` to `.env.local`. Set `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, and `VITE_GOOGLE_PROJECT_NUMBER` (the numeric project number, not its name). Restart Vite or rebuild. These are public frontend identifiers; never add a client secret.
+
+The OAuth client ID alone enables saving and listing Recallbox backups. The API key and project number also enable **Choose another file in Drive**. The UI explains when this chooser is not configured. 7. Open **Settings & backup → Connect Drive** and grant access. Then choose **Back up now**.
 
 The app uses Google's Identity Services token model and the narrow `drive.file` scope. It accesses files created or authorized for this app, not all files in your Drive. Tokens stay in memory, not in IndexedDB, localStorage, or exports. After expiry, reconnect. No client secret belongs in this frontend.
 
-Backups are ordinary, timestamped ZIP files in the visible Recallbox folder. They are not placed in `appDataFolder`. You can download, move, or delete them in Drive. The app lists the latest 100 backups and can restore one after confirmation. Upload uses Google's resumable-upload endpoint; if a request fails, retry from **Back up now**. Automatic background backup, cross-device sync, and automatic network-retry recovery are not included.
+**Backup & restore** offers **Download ZIP**, **Save to Google Drive**, **Choose ZIP file**, and **Choose from Google Drive**. Drive actions connect on demand. Backups are ordinary, timestamped ZIP files in the visible Recallbox folder, not `appDataFolder`. The folder is created on first save, not when browsing. The app lists the latest 100 backups; **Choose another file in Drive** opens Google's chooser for ZIPs elsewhere and grants access only to the selected file.
 
-**Verification limit:** the Google Drive integration has not been tested against a live Google account because this project has no configured OAuth client. Consent, allowed origins, and Google project policy must be checked with your deployment.
+Both restore sources download/read and validate the ZIP first, then show its name, source, and contents. **Replace library** requires confirmation and does not merge. The review also offers a download of the current library before replacement. Failed requests have inline retry actions; expired sessions offer **Reconnect and retry**. Upload uses Google's resumable-upload endpoint. If an upload response is lost, check recent backups before retrying: another attempt can create another timestamped ZIP. Automatic background backup and cross-device sync are not included.
+
+**Verification limit:** automated Drive tests use a separate build with fake public identifiers and mocked Google Identity, Drive, and Picker responses. They cover save/restore, validation, cancellation, empty/error states, and reconnect/retry, but do not verify Google's live UI or consent policy. No live Google account was used. Consent, allowed origins, API-key restrictions, Picker grants, and Google project policy must be checked with your deployment.
 
 ## Storage and safety
 
@@ -119,5 +124,6 @@ Deploy `dist/` to an HTTPS static host. Configure an SPA fallback so `/decks`, `
 - [ts-fsrs](https://open-spaced-repetition.github.io/ts-fsrs/)
 - [Google token model](https://developers.google.com/identity/oauth2/web/guides/use-token-model)
 - [Google Drive uploads](https://developers.google.com/drive/api/guides/manage-uploads)
+- [Google Picker setup](https://developers.google.com/workspace/drive/picker/guides/web-picker)
 - [Vite PWA update prompts](https://vite-pwa-org.netlify.app/guide/prompt-for-update.html)
 - [JSZip streaming](https://stuk.github.io/jszip/documentation/api_zipobject/internal_stream.html)
