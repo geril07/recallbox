@@ -9,7 +9,6 @@ import {
   Italic,
   Link2,
   List,
-  Loader2,
   Pencil,
   Plus,
 } from "lucide-react"
@@ -193,9 +192,10 @@ export function DeckEditor({
               </Button>
               <Button
                 type="submit"
-                disabled={busy || !name.trim() || !!tagQuery.trim()}
+                disabled={!name.trim() || !!tagQuery.trim()}
+                loading={busy}
               >
-                {busy ? <Loader2 className="animate-spin" /> : <Plus />}
+                <Plus />
                 {deck ? "Save changes" : "Create deck"}
               </Button>
             </DialogFooter>
@@ -529,15 +529,15 @@ export function CardEditor({
               </Button>
               <Button
                 type="submit"
+                loading={busy}
                 disabled={
-                  busy ||
                   !prompt.trim() ||
                   !answer.trim() ||
                   !selectedDeck ||
                   !!tagQuery.trim()
                 }
               >
-                {busy ? <Loader2 className="animate-spin" /> : <Check />}
+                <Check />
                 {card ? "Save changes" : "Add card"}
               </Button>
             </DialogFooter>

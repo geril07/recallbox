@@ -36,6 +36,17 @@ import {
 } from "@/components/ui/dialog"
 import { notify } from "@/components/ui/toast"
 
+type Operation =
+  | "download"
+  | "upload"
+  | "validate"
+  | "drive-list"
+  | "drive-picker"
+  | `drive-file:${string}`
+  | "safety-download"
+  | "restore"
+  | "retry"
+
 type Selection = { backup: Backup; name: string; source: string }
 type Failure = {
   message: string
@@ -52,7 +63,7 @@ async function downloadCurrent() {
 
 export function BackupSettings() {
   const { decks, cards } = useApp()
-  const [busy, setBusy] = useState("")
+  const [busy, setBusy] = useState<Operation | null>(null)
   const busyRef = useRef(false)
   const pickerAbort = useRef<AbortController | null>(null)
   useEffect(() => () => pickerAbort.current?.abort(), [])
@@ -82,13 +93,14 @@ export function BackupSettings() {
         .catch(() => setGoogleError(true))
   }, [])
 
-  async function run(label: string, action: () => Promise<void>) {
+  async function run(operation: Operation, action: () => Promise<void>) {
     if (busyRef.current) return
     busyRef.current = true
-    setBusy(label)
-    setFailure(null)
+    setBusy(operation)
+    if (operation !== "retry") setFailure(null)
     try {
       await action()
+      setFailure(null)
     } catch (error) {
       const reconnect = error instanceof DriveSessionExpired
       if (reconnect) setConnected(false)
@@ -108,7 +120,7 @@ export function BackupSettings() {
       })
     } finally {
       busyRef.current = false
-      setBusy("")
+      setBusy(null)
     }
   }
   async function ensureConnected() {
@@ -118,7 +130,6 @@ export function BackupSettings() {
     }
   }
   async function refreshDrive() {
-    setDrive(null)
     await ensureConnected()
     setDrive(await listDriveBackups())
   }
@@ -153,17 +164,12 @@ export function BackupSettings() {
         variant="outline"
         size="sm"
         disabled={!!busy}
-        onClick={() => void run("Retrying…", failure.retry)}
+        loading={busy === "retry"}
+        onClick={() => void run("retry", failure.retry)}
       >
         {failure.reconnect ? "Reconnect and retry" : "Retry"}
       </Button>
     </div>
-  )
-  const progress = busy && (
-    <p className="backup-progress" role="status">
-      <Loader2 className="animate-spin" size={16} />
-      {busy}
-    </p>
   )
   return (
     <section className="settings-section">
@@ -179,7 +185,8 @@ export function BackupSettings() {
             <Button
               variant="outline"
               disabled={!!busy}
-              onClick={() => void run("Preparing ZIP…", downloadCurrent)}
+              loading={busy === "download"}
+              onClick={() => void run("download", downloadCurrent)}
             >
               <ArrowDownToLine />
               Download ZIP
@@ -187,8 +194,9 @@ export function BackupSettings() {
             <Button
               variant="outline"
               disabled={!googleReady || !!busy}
+              loading={busy === "upload"}
               onClick={() =>
-                void run("Saving to Google Drive…", async () => {
+                void run("upload", async () => {
                   await ensureConnected()
                   const name = await uploadDriveBackup()
                   await setSetting("lastDriveBackup", new Date().toISOString())
@@ -223,6 +231,7 @@ export function BackupSettings() {
             <Button
               variant="outline"
               disabled={!!busy}
+              loading={busy === "validate"}
               onClick={() => input.current?.click()}
             >
               Choose ZIP file
@@ -230,9 +239,10 @@ export function BackupSettings() {
             <Button
               variant="outline"
               disabled={!googleReady || !!busy}
+              loading={busy === "drive-picker" && !driveOpen}
               onClick={() => {
                 setDriveOpen(true)
-                void run("Loading Drive backups…", refreshDrive)
+                void run("drive-list", refreshDrive)
               }}
             >
               <Cloud />
@@ -249,7 +259,7 @@ export function BackupSettings() {
               const file = event.target.files?.[0]
               event.target.value = ""
               if (file)
-                void run("Validating backup…", async () =>
+                void run("validate", async () =>
                   setSelection({
                     backup: await readBackup(file),
                     name: file.name,
@@ -302,12 +312,7 @@ export function BackupSettings() {
             </Button>
           </div>
         )}
-        {!driveOpen && !selection && (
-          <>
-            {progress}
-            {errorNotice}
-          </>
-        )}
+        {!driveOpen && !selection && errorNotice}
       </Card>
       {driveOpen && (
         <Dialog
@@ -334,16 +339,15 @@ export function BackupSettings() {
               <Button
                 variant="outline"
                 disabled={!!busy || !drivePickerConfigured}
-                onClick={() =>
-                  void run("Opening Google Drive chooser…", pickOtherFile)
-                }
+                onClick={() => void run("drive-picker", pickOtherFile)}
               >
                 Choose another file in Drive
               </Button>
               <Button
                 variant="ghost"
                 disabled={!!busy}
-                onClick={() => void run("Loading Drive backups…", refreshDrive)}
+                loading={!!drive && busy === "drive-list"}
+                onClick={() => void run("drive-list", refreshDrive)}
               >
                 <RefreshCw />
                 Refresh
@@ -355,7 +359,16 @@ export function BackupSettings() {
                 configuration. See README.md.
               </p>
             )}
-            {progress}
+            {!drive && busy === "drive-list" && (
+              <p className="backup-progress" role="status">
+                <Loader2
+                  className="animate-spin"
+                  size={16}
+                  aria-hidden="true"
+                />
+                Loading Drive backups…
+              </p>
+            )}
             {errorNotice}
             {drive && (
               <>
@@ -391,8 +404,9 @@ export function BackupSettings() {
                           variant="outline"
                           size="sm"
                           disabled={!!busy}
+                          loading={busy === `drive-file:${file.id}`}
                           onClick={() =>
-                            void run("Downloading and validating backup…", () =>
+                            void run(`drive-file:${file.id}`, () =>
                               selectDrive(file),
                             )
                           }
@@ -450,14 +464,12 @@ export function BackupSettings() {
                 cards. Download it first if you want to keep it.
               </p>
             </div>
-            {progress}
             {errorNotice}
             <Button
               variant="outline"
               disabled={!!busy}
-              onClick={() =>
-                void run("Preparing current library…", downloadCurrent)
-              }
+              loading={busy === "safety-download"}
+              onClick={() => void run("safety-download", downloadCurrent)}
             >
               <ArrowDownToLine />
               Download current library first
@@ -476,8 +488,9 @@ export function BackupSettings() {
               <Button
                 variant="destructive"
                 disabled={!!busy}
+                loading={busy === "restore"}
                 onClick={() =>
-                  void run("Replacing library…", async () => {
+                  void run("restore", async () => {
                     await restoreBackup(selection.backup)
                     setSelection(null)
                     notify(

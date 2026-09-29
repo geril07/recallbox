@@ -123,7 +123,8 @@ export function Settings() {
             </div>
             <Button
               variant="outline"
-              disabled={!canPersist || storage.persisted || busy}
+              disabled={!canPersist || storage.persisted}
+              loading={busy}
               onClick={() => void keepData()}
             >
               {storage.persisted && <Check />}

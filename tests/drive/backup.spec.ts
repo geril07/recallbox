@@ -5,6 +5,7 @@ import JSZip from "jszip"
 async function mockDrive(
   page: Page,
   options: {
+    beforeResponse?: (url: URL) => Promise<void>
     listStatus?: number
     empty?: boolean
     invalid?: boolean
@@ -77,6 +78,7 @@ async function mockDrive(
   await page.route("https://www.googleapis.com/**", async (route) => {
     const request = route.request()
     const url = new URL(request.url())
+    await options.beforeResponse?.(url)
     expect(request.headers().authorization).toBe("Bearer test-token")
     if (url.pathname.includes("/upload/")) {
       if (request.method() === "POST") {
@@ -274,3 +276,128 @@ for (const kind of ["invalid", "large"] as const)
     await expect(page.getByText(/4 decks · 14 cards/)).toBeVisible()
     if (kind === "large") expect(mock.downloads()).toBe(0)
   })
+
+test("Drive upload stays in its button without moving nearby content", async ({
+  page,
+}) => {
+  const upload = Promise.withResolvers<void>()
+  await mockDrive(page, {
+    beforeResponse: async (url) => {
+      if (url.pathname.includes("/upload/")) await upload.promise
+    },
+  })
+  const save = page.getByRole("button", {
+    name: "Save to Google Drive",
+    exact: true,
+  })
+  await expect(save).toBeEnabled()
+  await save.scrollIntoViewIfNeeded()
+  const before = await save.boundingBox()
+  const restore = page.getByRole("heading", { name: "Restore your library" })
+  const restoreBefore = await restore.boundingBox()
+  try {
+    await save.click()
+    await expect(save).toHaveAttribute("aria-busy", "true")
+    await expect(save).toBeDisabled()
+    await expect(
+      page.getByRole("button", { name: "Download ZIP" }),
+    ).toBeDisabled()
+    await expect(page.locator("button[aria-busy=true]")).toHaveCount(1)
+    await expect(page.locator(".backup-progress")).toHaveCount(0)
+    expect(await save.boundingBox()).toEqual(before)
+    expect(await restore.boundingBox()).toEqual(restoreBefore)
+  } finally {
+    upload.resolve()
+  }
+  await expect(save).toBeEnabled()
+  await expect(save).not.toHaveAttribute("aria-busy", "true")
+})
+
+test("Drive refresh retains the list and selection loads only its own button", async ({
+  page,
+}) => {
+  let pause = false
+  const request = Promise.withResolvers<void>()
+  await mockDrive(page, {
+    beforeResponse: async () => {
+      if (pause) await request.promise
+    },
+  })
+  await page.getByRole("button", { name: "Choose from Google Drive" }).click()
+  const chooser = page.getByRole("dialog", { name: "Choose a Drive backup" })
+  const choose = chooser.getByRole("button", {
+    name: "Choose backup recallbox-test.zip",
+    exact: true,
+  })
+  await expect(choose).toBeVisible()
+  const refresh = chooser.getByRole("button", { name: "Refresh", exact: true })
+  await refresh.scrollIntoViewIfNeeded()
+  const before = await chooser.boundingBox()
+  pause = true
+  try {
+    await refresh.click()
+    await expect(refresh).toHaveAttribute("aria-busy", "true")
+    await expect(choose).toBeVisible()
+    await expect(choose).toBeDisabled()
+    await expect(chooser.getByRole("status")).toHaveCount(0)
+    expect(await chooser.boundingBox()).toEqual(before)
+  } finally {
+    request.resolve()
+  }
+  await expect(refresh).toBeEnabled()
+
+  const download = Promise.withResolvers<void>()
+  await page.route("**/files/backup?alt=media", async (route) => {
+    await download.promise
+    await route.fallback()
+  })
+  await choose.scrollIntoViewIfNeeded()
+  const buttonBefore = await choose.boundingBox()
+  try {
+    await choose.click()
+    await expect(choose).toHaveAttribute("aria-busy", "true")
+    await expect(refresh).toBeDisabled()
+    await expect(chooser.locator("button[aria-busy=true]")).toHaveCount(1)
+    await expect(chooser.getByRole("status")).toHaveCount(0)
+    expect(await choose.boundingBox()).toEqual(buttonBefore)
+  } finally {
+    download.resolve()
+  }
+  await expect(
+    page.getByRole("dialog", { name: "Review backup" }),
+  ).toBeVisible()
+})
+
+test("retry keeps the error visible and loads in the retry button", async ({
+  page,
+}) => {
+  let pause = false
+  const retryRequest = Promise.withResolvers<void>()
+  await mockDrive(page, {
+    listStatus: 503,
+    beforeResponse: async () => {
+      if (pause) await retryRequest.promise
+    },
+  })
+  await page.getByRole("button", { name: "Choose from Google Drive" }).click()
+  const chooser = page.getByRole("dialog", { name: "Choose a Drive backup" })
+  const alert = chooser.getByRole("alert")
+  const retry = alert.getByRole("button", { name: "Retry", exact: true })
+  await expect(retry).toBeVisible()
+  await retry.scrollIntoViewIfNeeded()
+  const before = await alert.boundingBox()
+  pause = true
+  try {
+    await retry.click()
+    await expect(retry).toHaveAttribute("aria-busy", "true")
+    await expect(alert).toBeVisible()
+    expect(await alert.boundingBox()).toEqual(before)
+    await expect(chooser.getByRole("status")).toHaveCount(0)
+  } finally {
+    retryRequest.resolve()
+  }
+  await expect(
+    chooser.getByRole("button", { name: /Choose backup/ }),
+  ).toBeVisible()
+  await expect(alert).toHaveCount(0)
+})

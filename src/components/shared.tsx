@@ -120,9 +120,8 @@ export function Confirm({
           <Button
             variant={destructive ? "destructive" : "default"}
             onClick={onConfirm}
-            disabled={busy}
+            loading={busy}
           >
-            {busy && <Loader2 className="animate-spin" />}
             {label}
           </Button>
         </AlertDialogFooter>
